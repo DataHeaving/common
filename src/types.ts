@@ -1,4 +1,6 @@
-export type ItemOrFactory<T, TParam> = T | ((param: TParam) => T);
+export type ItemOrFactory<T, TParams extends Array<unknown> = []> =
+  | T
+  | ((...params: TParams) => T);
 
 export type MakeOptional<T, Props extends keyof T> = Omit<T, Props> &
   { [P in Props]?: T[P] };
@@ -25,3 +27,5 @@ export interface ObjectStorageFunctionality<TObject> {
   readExistingData: () => Promise<TObject | string | Buffer | undefined>;
   writeNewDataWhenDifferent: (md: TObject) => Promise<unknown>;
 }
+
+export type MaybePromise<T> = T | Promise<T>;

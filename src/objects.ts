@@ -92,8 +92,13 @@ function calculateDiffPathsImpl(
               const isInX = key in x;
               const isInY = key in y;
               if (isInX && isInY) {
-                // eslint-disable-next-line
-                calculateDiffPathsImpl((x as any)[key], (y as any)[key], parentPaths, key, allResults);
+                calculateDiffPathsImpl(
+                  (x as any)[key], // eslint-disable-line
+                  (y as any)[key], // eslint-disable-line
+                  parentPaths,
+                  key,
+                  allResults,
+                );
               } else if (!isInX) {
                 // y has extra element - treat as insertion
                 allResults.push({
@@ -127,18 +132,35 @@ function calculateDiffPathsImpl(
   }
 }
 
-// export const iterateChunks = <T>(array: ReadonlyArray<T>, maxLength: number, onChunk: (chunk: ReadonlyArray<T>, startIndex: number) => unknown) => {
-//   let start = 0;
-//   while (start + maxLength <= array.length) {
-//     onChunk(array.slice(start, start + maxLength), start);
-//     start += maxLength;
-//   }
+export const getChunks = <T>(array: ReadonlyArray<T>, maxLength: number) => {
+  let retVal: Array<ReadonlyArray<T>> | undefined = undefined;
+  if (maxLength >= array.length) {
+    retVal = [array];
+  } else if (maxLength <= 1) {
+    retVal = array.map((element) => [element]);
+  } else {
+    retVal = [];
+    iterateChunks(array, maxLength, (chunk) => retVal?.push(chunk));
+  }
+  return retVal;
+};
 
-//   if (start < array.length) {
-//     maxLength = array.length - start;
-//     onChunk(array.slice(start, start + maxLength), start);
-//   }
-// };
+export const iterateChunks = <T>(
+  array: ReadonlyArray<T>,
+  maxLength: number,
+  onChunk: (chunk: ReadonlyArray<T>, startIndex: number) => unknown,
+) => {
+  let start = 0;
+  while (start + maxLength <= array.length) {
+    onChunk(array.slice(start, start + maxLength), start);
+    start += maxLength;
+  }
+
+  if (start < array.length) {
+    maxLength = array.length - start;
+    onChunk(array.slice(start, start + maxLength), start);
+  }
+};
 
 export const getOrDefault = <T>(
   currentValue: T | undefined,
@@ -164,3 +186,14 @@ export const getOrDefaultOrThrow = <T>(
 
   return retVal;
 };
+
+// export const unwrapItemOrFactory = <T, TParams extends Array<unknown>>(
+//   itemOrFactory: types.ItemOrFactory<
+//     T extends () => unknown ? never : T,
+//     TParams
+//   >,
+//   ...parameters: TParams
+// ) =>
+//   typeof itemOrFactory === "function"
+//     ? itemOrFactory(...parameters)
+//     : itemOrFactory;
