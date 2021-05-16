@@ -12,19 +12,19 @@ export interface DatumStoring<TDatum> {
   end: () => void;
 }
 
-export type DatumStoringFactory<TArg, TDatum, TResult = unknown> = (
-  arg: TArg,
+export type DatumStoringFactory<TContext, TDatum, TResult = unknown> = (
+  context: TContext,
   recreateSignal: () => void,
 ) => {
   storing: DatumStoring<TDatum>;
   promise?: Promise<TResult>;
 };
 
-export type TPipelineFactory<TArg, TDatum> = (
-  datumStoringFactory: () => DatumStoringFactory<TArg, TDatum>,
-) => TPipeline;
+export type TPipelineFactory<TInput, TContext, TDatum> = (
+  datumStoringFactory: () => DatumStoringFactory<TContext, TDatum>,
+) => TPipeline<TInput>;
 
-export type TPipeline = () => Promise<void>;
+export type TPipeline<TInput> = (input: TInput) => Promise<void>;
 
 export interface ControlFlow {
   pause: () => void;
@@ -36,8 +36,8 @@ export interface ControlFlow {
 //   next: DatumStoring<TTransformed>,
 // ) => DatumProcessor<TDatum>; // DatumTransformer<TDatum, TTransformed>;
 
-export type SimpleDatumTransformerFactory<TArg, TDatum, TTransformed> = (
-  arg: TArg,
+export type SimpleDatumTransformerFactory<TContext, TDatum, TTransformed> = (
+  arg: TContext,
 ) => SimpleDatumTransformer<TDatum, TTransformed>;
 
 export type SimpleDatumTransformer<TDatum, TTransformed> = (
