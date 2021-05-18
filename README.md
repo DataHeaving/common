@@ -7,7 +7,7 @@ There are multiple packages in the repository, all of which could be thought as 
 - [Azure](azure) package for most commonly used helpers to work when handling data in Azure cloud.
 
 # Usage
-All packages of Data Heaving project are published as NPM packages to public NPM repository under @data-heaving organization.
+All packages of Data Heaving project are published as NPM packages to public NPM repository under `@data-heaving` organization.
 
 # More information
 To learn more what Data Heaving project is all about, see here.
