@@ -25,12 +25,28 @@ jobs:
           set -e
           
           CURRENT_BRANCH="${GITHUB_REF#refs/heads/}"
+          # Note that git merge still wants these settings even with --no-commit flag
           git config user.email "you@example.com"
           git config user.name "Your Name"
-          git fetch origin "${CURRENT_BRANCH}" && echo "Debug1" && git branch "${CURRENT_BRANCH}" FETCH_HEAD && echo "Debug2" && git merge --no-ff --no-commit --verbose "${CURRENT_BRANCH}"
+          git fetch origin "${CURRENT_BRANCH}" \
+            && git branch "${CURRENT_BRANCH}" FETCH_HEAD \
+            && git merge --no-ff --no-commit --verbose "${CURRENT_BRANCH}"
+
           cd common
           npm ci
+          npm run build
+          npm run test
+          npm pack
+          
+          mv "$(find $(pwd) -mindepth 1 -maxdepth 1 -type f -name '*.tgz')" package.tgz
           # npm test
+      - name: Archive common package
+        uses: actions/upload-artifact@v2
+        with:
+          name: common
+          path: |
+            common/package.tgz
+          retention-days: 1
 
   build_others:
     needs: build_common
@@ -46,13 +62,24 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: 14
+      - name: Download common package
+        uses: actions/download-artifact@v2
+        with:
+          name: common
       - id: build
         name: Build ${{ matrix.dir }}
         shell: bash
         run: |
           set -e
           
-          git merge --no-ff "${GITHUB_REF#refs/heads/}"
+          ls -al
+          CURRENT_BRANCH="${GITHUB_REF#refs/heads/}"
+          # Note that git merge still wants these settings even with --no-commit flag
+          git config user.email "you@example.com"
+          git config user.name "Your Name"
+          git fetch origin "${CURRENT_BRANCH}" \
+            && git branch "${CURRENT_BRANCH}" FETCH_HEAD \
+            && git merge --no-ff --no-commit --verbose "${CURRENT_BRANCH}"
           cd ${{ matrix.dir }}
           npm ci
           # npm test

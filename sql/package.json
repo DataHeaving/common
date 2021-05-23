@@ -11,6 +11,7 @@
     "url": "https://github.com/DataHeaving/common-sql.git"
   },
   "scripts": {
+    "build": "npm run tsc && npm run lint",
     "tsc": "tsc --project tsconfig.json && tsc --project tsconfig.json --outDir ./dist/esm --module ES2020",
     "prepublishOnly": "rm -rf dist && npm run tsc && npm run lint",
     "lint": "eslint ./src --ext .ts,.tsx",
