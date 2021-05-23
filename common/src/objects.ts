@@ -170,22 +170,36 @@ export const getOrDefault = <T>(
   return retVal;
 };
 
-export const getOrDefaultOrThrow = <T>(
+export function getOrDefaultOrThrow<T>(
+  currentValue: T | undefined,
+  defaultValue: T,
+): T;
+export function getOrDefaultOrThrow<T>(
   currentValue: T | undefined,
   defaultValue: T | undefined,
   descriptorString: () => string,
   context: () => string,
-) => {
+): T;
+export function getOrDefaultOrThrow<T>(
+  currentValue: T | undefined,
+  defaultValue: T | undefined,
+  descriptorString?: () => string,
+  context?: () => string,
+) {
   const retVal = getOrDefault(currentValue, defaultValue);
   if (retVal === undefined) {
-    const str = descriptorString();
-    throw new Error(
-      `No ${str} specified for ${context()}, and no default ${str} specified either.`,
-    );
+    let errorMsg: string;
+    if (descriptorString && context) {
+      const str = descriptorString();
+      errorMsg = `No ${str} specified for ${context()}, and no default ${str} specified either.`;
+    } else {
+      errorMsg = `Default value was undefined`;
+    }
+    throw new Error(errorMsg);
   }
 
   return retVal;
-};
+}
 
 // export const unwrapItemOrFactory = <T, TParams extends Array<unknown>>(
 //   itemOrFactory: types.ItemOrFactory<
