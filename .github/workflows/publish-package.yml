@@ -1,0 +1,34 @@
+name: CD Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package name'
+        required: true
+
+jobs:
+  build_common:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14
+      - id: build
+        name: Build Common
+        shell: bash
+        run: |
+          set -e
+          
+          CURRENT_BRANCH="${GITHUB_REF#refs/heads/}"
+          if [[ "${CURRENT_BRANCH}" != "main" ]]; then
+            echo 'This action can only be run on main branch!' 1>&2
+            exit 1
+          fi
+
+          # Note that git merge still wants these settings even with --no-commit flag
+
+          cd ${{ github.event.inputs.package }}
+          npm ci
+          npm publish
