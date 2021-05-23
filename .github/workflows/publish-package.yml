@@ -1,4 +1,6 @@
-on: 
+name: CD Pipeline
+
+on:
   workflow_dispatch:
     inputs:
       package:
