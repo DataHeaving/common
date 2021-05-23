@@ -38,14 +38,13 @@ jobs:
           npm run test
           npm pack
           
-          mv "$(find $(pwd) -mindepth 1 -maxdepth 1 -type f -name '*.tgz')" package.tgz
-          # npm test
+          mv "$(find $(pwd) -mindepth 1 -maxdepth 1 -type f -name '*.tgz')" common.tgz
       - name: Archive common package
         uses: actions/upload-artifact@v2
         with:
           name: common
           path: |
-            common/package.tgz
+            common/common.tgz
           retention-days: 1
 
   build_others:
@@ -71,8 +70,7 @@ jobs:
         shell: bash
         run: |
           set -e
-          
-          ls -al
+
           CURRENT_BRANCH="${GITHUB_REF#refs/heads/}"
           # Note that git merge still wants these settings even with --no-commit flag
           git config user.email "you@example.com"
@@ -80,8 +78,17 @@ jobs:
           git fetch origin "${CURRENT_BRANCH}" \
             && git branch "${CURRENT_BRANCH}" FETCH_HEAD \
             && git merge --no-ff --no-commit --verbose "${CURRENT_BRANCH}"
-          cd ${{ matrix.dir }}
+
+          cd common
+          mkdir -p 'node_modules/@data-heaving/common'
+          tar -xzvf ../common.tgz -C 'node_modules/@data-heaving'
+          ls -al 'node_modules/@data-heaving/common'
+
           npm ci
-          # npm test
+          npm run build
+          npm run test
+          npm pack
+          
+          mv "$(find $(pwd) -mindepth 1 -maxdepth 1 -type f -name '*.tgz')" package.tgz
 
 
