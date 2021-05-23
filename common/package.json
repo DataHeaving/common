@@ -13,7 +13,7 @@
   "scripts": {
     "build": "npm run tsc && npm run lint",
     "tsc": "tsc --project tsconfig.json && tsc --project tsconfig.json --outDir ./dist/esm --module ES2020",
-    "prepublishOnly": "rm -rf dist && npm run tsc && npm run lint",
+    "prepublishOnly": "rm -rf dist && npm run build && npm run test",
     "lint": "eslint ./src --ext .ts,.tsx",
     "watch": "tsc -w",
     "prestart": "npm run build",
