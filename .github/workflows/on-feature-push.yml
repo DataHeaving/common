@@ -24,8 +24,8 @@ jobs:
         run: |
           set -e
           
-          git rev-parse HEAD
-          git fetch origin "${GITHUB_REF#refs/heads/}:refs/remotes/origin/${GITHUB_REF#refs/heads/}" && git merge --no-ff "${GITHUB_REF#refs/heads/}"
+          CURRENT_BRANCH="${GITHUB_REF#refs/heads/}"
+          git fetch origin "${CURRENT_BRANCH}" && git branch "${CURRENT_BRANCH}" FETCH_HEAD && git merge --no-ff "${CURRENT_BRANCH}"
           cd common
           npm ci
           # npm test
