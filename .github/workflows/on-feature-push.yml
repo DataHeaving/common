@@ -25,7 +25,7 @@ jobs:
           set -e
           
           git rev-parse HEAD
-          git merge --no-ff "${GITHUB_REF#refs/heads/}"
+          git fetch origin "${GITHUB_REF#refs/heads/}" && git merge --no-ff "${GITHUB_REF#refs/heads/}"
           cd common
           npm ci
           # npm test
