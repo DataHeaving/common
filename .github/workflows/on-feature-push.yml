@@ -16,12 +16,12 @@ jobs:
         with:
           node-version: 14
       - run: |
-        set -e
-        
-        git checkout develop && git merge 
-        cd common
-        npm ci
-        # npm test
+          set -e
+          
+          git checkout develop && git merge 
+          cd common
+          npm ci
+          # npm test
 
   build_others:
     strategy:
@@ -34,11 +34,11 @@ jobs:
         with:
           node-version: 14
       - run: |
-        set -e
-        
-        git checkout develop && git merge
-        cd ${{ matrix.dir }}
-        npm ci
-        # npm test
+          set -e
+          
+          git checkout develop && git merge
+          cd ${{ matrix.dir }}
+          npm ci
+          # npm test
 
 
