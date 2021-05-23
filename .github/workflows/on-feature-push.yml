@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: refs/heads/develop
+          fetch-depth: 0
       - uses: actions/setup-node@v2
         with:
           node-version: 14
@@ -21,7 +24,8 @@ jobs:
         run: |
           set -e
           
-          git pull && git checkout develop && git merge --no-ff ${GITHUB_SHA}
+          git rev-parse HEAD
+          git merge --no-ff "${GITHUB_REF#refs/heads/}"
           cd common
           npm ci
           # npm test
@@ -34,13 +38,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: refs/heads/develop
+          fetch-depth: 0
       - uses: actions/setup-node@v2
         with:
           node-version: 14
-      - run: |
+      - id: build
+        name: Build ${{ matrix.dir }}
+        shell: bash
+        run: |
           set -e
           
-          git checkout develop && git merge
+          git merge --no-ff "${GITHUB_REF#refs/heads/}"
           cd ${{ matrix.dir }}
           npm ci
           # npm test
