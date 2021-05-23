@@ -25,7 +25,7 @@ jobs:
           set -e
           
           CURRENT_BRANCH="${GITHUB_REF#refs/heads/}"
-          git fetch origin "${CURRENT_BRANCH}" && echo "Debug1" && git branch "${CURRENT_BRANCH}" FETCH_HEAD && echo "Debug2" && git merge --no-ff --no-commit --verbose "${CURRENT_BRANCH}"
+          git fetch origin "${CURRENT_BRANCH}" && echo "Debug1" && git branch "${CURRENT_BRANCH}" FETCH_HEAD && echo "Debug2" && git -c user.email='unused@unused.com' -c user.name='Unused Unused' merge --no-ff --no-commit --verbose "${CURRENT_BRANCH}"
           cd common
           npm ci
           # npm test
