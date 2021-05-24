@@ -39,8 +39,5 @@
   "files": [
     "dist/",
     "src/"
-  ],
-  "dependencies": {
-    "@jsdevtools/npm-publish": "^1.4.3"
-  }
+  ]
 }
