@@ -4,10 +4,9 @@
 name: CI Pipeline
 
 on:
-  push:
-    branches-ignore:
-    - develop # Don't trigger on develop branch - this pipeline always runs on develop branch, doing detached-merge build
-    - main # Don't trigger on main branch - CD pipeline will handle that
+  pull_request:
+    branches:
+    - develop
     paths:
     # Trigger only when there are changes to any code (as opposed to READMEs etc)
     - 'common/**'
@@ -20,7 +19,10 @@ on:
     - '!azure/README.md'
 
 jobs:
-  build_common:
+  build_and_test:
+    strategy:
+      matrix:
+        dir: [ common, sql, validation, azure ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -44,63 +46,7 @@ jobs:
             && git branch "${CURRENT_BRANCH}" FETCH_HEAD \
             && git merge --no-ff --no-commit --verbose "${CURRENT_BRANCH}"
 
-          cd common
+          cd ${{ matrix.dir }}
           npm ci
           npm run build
           npm run test
-          npm pack
-          
-          mv "$(find $(pwd) -mindepth 1 -maxdepth 1 -type f -name '*.tgz')" common.tgz
-      - name: Archive common package
-        uses: actions/upload-artifact@v2
-        with:
-          name: common
-          path: |
-            common/common.tgz
-          retention-days: 1
-
-  build_others:
-    needs: build_common
-    strategy:
-      matrix:
-        dir: [ sql, validation, azure]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: refs/heads/develop
-          fetch-depth: 0
-      - uses: actions/setup-node@v2
-        with:
-          node-version: 14
-      - name: Download common package
-        uses: actions/download-artifact@v2
-        with:
-          name: common
-      - id: build
-        name: Build ${{ matrix.dir }}
-        shell: bash
-        run: |
-          set -e
-
-          CURRENT_BRANCH="${GITHUB_REF#refs/heads/}"
-          # Note that git merge still wants these settings even with --no-commit flag
-          git config user.email "you@example.com"
-          git config user.name "Your Name"
-          git fetch origin "${CURRENT_BRANCH}" \
-            && git branch "${CURRENT_BRANCH}" FETCH_HEAD \
-            && git merge --no-ff --no-commit --verbose "${CURRENT_BRANCH}"
-
-          cd common
-          mkdir -p 'node_modules/@data-heaving/common'
-          tar -xzvf ../common.tgz -C 'node_modules/@data-heaving'
-          ls -al 'node_modules/@data-heaving/common'
-
-          npm ci
-          npm run build
-          npm run test
-          npm pack
-          
-          mv "$(find $(pwd) -mindepth 1 -maxdepth 1 -type f -name '*.tgz')" package.tgz
-
-
