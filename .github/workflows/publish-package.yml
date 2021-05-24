@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       package:
-        description: 'Package name'
+        description: "Package name"
         required: true
 
 jobs:
@@ -20,7 +20,7 @@ jobs:
         shell: bash
         run: |
           set -e
-          
+
           CURRENT_BRANCH="${GITHUB_REF#refs/heads/}"
           if [[ "${CURRENT_BRANCH}" != "main" ]]; then
             echo 'This action can only be run on main branch!' 1>&2
@@ -31,7 +31,8 @@ jobs:
           npm ci
           PACKAGE_VERSION="$(cat package.json | jq -rM .version)"
           npm install @jsdevtools/npm-publish
-          ./node_modules/.bin/npm-publish --access public --token '${{ secrets.NPM_TOKEN }}'
+          # ./node_modules/.bin/npm-publish --access public --token '${{ secrets.NPM_TOKEN }}'
+          echo PUBLISH_SIMULATOR
 
           # TODO we must generate release notes for the package
           GIT_TAG_NAME="${{ github.event.inputs.package }}-v${PACKAGE_VERSION}"
