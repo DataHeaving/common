@@ -35,7 +35,10 @@ jobs:
           echo PUBLISH_SIMULATOR
 
           # TODO we must generate release notes for the package
+          # TODO set up organization-wide CICD-GitHub account
           GIT_TAG_NAME="${{ github.event.inputs.package }}-v${PACKAGE_VERSION}"
+          git config --global user.email "cd-automation@dataheaving.project"
+          git config --global user.name "CD Automation"
           git tag \
             -a \
             -m "Component ${{ github.event.inputs.package }} release ${PACKAGE_VERSION}" \
