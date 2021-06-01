@@ -33,7 +33,7 @@ jobs:
         with:
           node-version: 14
       - id: build
-        name: Build Common
+        name: Build ${{ matrix.dir }}
         shell: bash
         run: |
           set -e
