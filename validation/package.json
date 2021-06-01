@@ -20,7 +20,7 @@
     "prestart": "npm run build",
     "run": "node dist/cjs",
     "dev-run": "ts-node dist/cjs",
-    "test": "ava",
+    "test": "echo TODO tests",
     "remove-test-files": "rm -rf dist/tests src/tests"
   },
   "dependencies": {
