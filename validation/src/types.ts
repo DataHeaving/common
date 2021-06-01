@@ -43,3 +43,6 @@ export const uuid = t.refinement(
   },
   "UUID",
 );
+
+export const oneOrMany = <T extends t.Mixed>(type: T, name?: string) =>
+  t.union([type, t.array(type)], name);

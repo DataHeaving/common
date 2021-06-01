@@ -24,13 +24,19 @@ export function createObjectStorageFunctionality<TObject>(
   return {
     storageID: blobClient.url,
     readExistingData: () => blobClient.downloadToBuffer(),
-    writeNewDataWhenDifferent: async (data) => {
-      await blobClient.uploadData(Buffer.from(JSON.stringify(data)));
+    writeNewData: async (data) => {
+      await blobClient.uploadData(
+        data instanceof Buffer ? data : Buffer.from(JSON.stringify(data)),
+      );
     },
   };
 }
 
-export const sanitizeForBlobPath = (str: string) =>
-  str
-    .replace(/[/ ]/gi, (badChar) => `¤${badChar.codePointAt(0)}`)
-    .toLowerCase();
+export const escapeForBlobPath = (str: string) =>
+  str.replace(/[/ ]/gi, (badChar) => `¤${badChar.codePointAt(0)}`);
+// .toLowerCase();
+
+export const unescapeFromBlobPath = (path: string) =>
+  path.replace(/¤(\d\d)/gi, (matchedString) =>
+    String.fromCodePoint(Number.parseInt(matchedString.substr(1))),
+  );
