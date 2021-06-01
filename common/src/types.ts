@@ -25,7 +25,7 @@ export type DeepPartial<T> = {
 export interface ObjectStorageFunctionality<TObject> {
   storageID: string;
   readExistingData: () => Promise<TObject | string | Buffer | undefined>;
-  writeNewDataWhenDifferent: (md: TObject) => Promise<unknown>;
+  writeNewData: (md: TObject) => Promise<unknown>;
 }
 
 export type MaybePromise<T> = T | Promise<T>;
