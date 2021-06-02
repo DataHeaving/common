@@ -24,6 +24,7 @@ jobs:
       matrix:
         dir: [ common, sql, validation, azure ]
     runs-on: ubuntu-latest
+    name: Build and test ${{ matrix.dir }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -33,7 +34,7 @@ jobs:
         with:
           node-version: 14
       - id: build
-        name: Build ${{ matrix.dir }}
+        name: Build and test ${{ matrix.dir }}
         shell: bash
         run: |
           set -e
