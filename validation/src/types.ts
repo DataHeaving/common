@@ -18,9 +18,19 @@ export const isoDateString = t.refinement(
 );
 export const urlWithPath = t.refinement(
   t.string,
-  (str) => (str.match(/\//g) || []).length > 2,
+  (str) => {
+    let retVal = false;
+    const firstDoubleSlash = str.indexOf("//");
+    if (firstDoubleSlash > 0) {
+      const pathStart = str.indexOf("/", firstDoubleSlash + 2);
+      if (pathStart > 0) {
+        retVal = str.substr(pathStart + 1).search(/[^/]/) >= 0;
+      }
+    }
+    return retVal;
+  },
   "URLWithPath",
-); // URL with path should have at least 3 forward slashes
+);
 export const intGeqZero = t.refinement(
   t.Integer,
   (int) => int >= 0,
