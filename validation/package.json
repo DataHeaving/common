@@ -1,6 +1,6 @@
 {
   "name": "@data-heaving/common-validation",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "author": {
     "name": "Stanislav Muhametsin",
     "email": "346799+stazz@users.noreply.github.com",
@@ -21,7 +21,7 @@
     "remove-test-files": "rm -rf dist/*/tests src/*/tests"
   },
   "dependencies": {
-    "@data-heaving/common": "0.10.0",
+    "@data-heaving/common": "0.10.1",
     "fp-ts": "2.9.5",
     "io-ts": "2.2.15"
   },
