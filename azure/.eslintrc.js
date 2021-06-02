@@ -34,8 +34,7 @@ module.exports = {
       node: {
         paths: ["src"],
         extensions: [".ts"] // Add .tsx, .js, .jsx if needed
-      },
-      typescript: {}
+      }
     }
   }
 };
