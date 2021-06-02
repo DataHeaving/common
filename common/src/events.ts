@@ -1,3 +1,5 @@
+import * as types from "./types";
+
 export type EventHandler<T, TReturn = void | boolean> = (
   arg: Readonly<T>,
 ) => TReturn;
@@ -160,17 +162,24 @@ export class EventEmitter<T> {
   }
 }
 
-export type ValueOrFactory<T> = T | (() => T);
+export interface ConsoleAbstraction {
+  log: (msg: string) => void;
+  error: (msg: string) => void;
+}
 
-/* eslint-disable no-console */
 export const createConsoleLogger = (
-  logMessagePrefix: ValueOrFactory<string> | undefined,
+  logMessagePrefix: types.ItemOrFactory<string> | undefined,
+  consoleOverride: ConsoleAbstraction = console,
 ) =>
   logMessagePrefix
     ? typeof logMessagePrefix === "string"
       ? (str: string, isError?: boolean) =>
-          console[isError ? "error" : "log"](`${logMessagePrefix}${str}`)
+          consoleOverride[isError ? "error" : "log"](
+            `${logMessagePrefix}${str}`,
+          )
       : (str: string, isError?: boolean) =>
-          console[isError ? "error" : "log"](`${logMessagePrefix()}${str}`)
+          consoleOverride[isError ? "error" : "log"](
+            `${logMessagePrefix()}${str}`,
+          )
     : (str: string, isError?: boolean) =>
-        console[isError ? "error" : "log"](str);
+        consoleOverride[isError ? "error" : "log"](str);
