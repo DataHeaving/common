@@ -31,24 +31,27 @@ export interface ControlFlow {
   resume: () => void;
 }
 
-// export type DatumTransformerFactory<TArg, TDatum, TTransformed> = (
-//   arg: TArg,
-//   next: DatumStoring<TTransformed>,
-// ) => DatumProcessor<TDatum>; // DatumTransformer<TDatum, TTransformed>;
+export type DatumTransformerFactory<TContext, TDatum, TTransformed> =
+  | SimpleDatumTransformerFactory<TContext, TDatum, TTransformed>
+  | ComplexDatumTransformerFactory<TContext, TDatum, TTransformed>;
 
-export type SimpleDatumTransformerFactory<TContext, TDatum, TTransformed> = (
-  arg: TContext,
-) => SimpleDatumTransformer<TDatum, TTransformed>;
+export type SimpleDatumTransformerFactory<TContext, TDatum, TTransformed> = {
+  transformer: "simple";
+  factory: (arg: TContext) => SimpleDatumTransformer<TDatum, TTransformed>;
+};
 
 export type SimpleDatumTransformer<TDatum, TTransformed> = (
   datum: TDatum,
 ) => TTransformed;
 
-export type ComplexDatumTransformerFactory<TArg, TDatum, TTransformed> = () => (
-  next: DatumStoring<TTransformed>,
-  arg: TArg,
-  recreateSignal: () => void,
-) => ComplexDatumTransformer<TDatum>;
+export type ComplexDatumTransformerFactory<TContext, TDatum, TTransformed> = {
+  transformer: "complex";
+  factory: () => (
+    next: DatumStoring<TTransformed>,
+    arg: TContext,
+    recreateSignal: () => void,
+  ) => ComplexDatumTransformer<TDatum>;
+};
 
 export interface ComplexDatumTransformer<TDatum> {
   transformer: DatumProcessor<TDatum>;
