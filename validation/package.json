@@ -45,5 +45,11 @@
     "src/"
   ],
   "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js"
+  "module": "./dist/esm/index.js",
+  "ava": {
+    "files": [
+      "dist/cjs/**/tests/*.js"
+    ],
+    "timeout": "10m"
+  }
 }

@@ -18,9 +18,17 @@ export const isoDateString = t.refinement(
 );
 export const urlWithPath = t.refinement(
   t.string,
-  (str) =>
-    (str.match(/\//g) || []).length > 2 &&
-    str.lastIndexOf("/") < str.length - 1,
+  (str) => {
+    let retVal = false;
+    const firstDoubleSlash = str.indexOf("//");
+    if (firstDoubleSlash > 0) {
+      const pathStart = str.indexOf("/", firstDoubleSlash + 2);
+      if (pathStart > 0) {
+        retVal = str.substr(pathStart + 1).search(/[^/]/) >= 0;
+      }
+    }
+    return retVal;
+  },
   "URLWithPath",
 );
 export const intGeqZero = t.refinement(
