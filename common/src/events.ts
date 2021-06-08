@@ -1,3 +1,5 @@
+import * as dicts from "./dictionaries";
+import * as objs from "./objects";
 import * as types from "./types";
 
 export type EventHandler<T, TReturn = void | boolean> = (
@@ -110,21 +112,25 @@ export class EventEmitterBuilder<T>
       },
     };
   }
+
+  public combine(other: EventEmitterBuilder<T> | EventEmitter<T>) {
+    combine(
+      (other as EventEmitterBuilder<T>)._eventHandlers, // Fugly, but what can you do, when no 'internal' modifier available... Maybe can add "createEventHandlersCopy" to EventEmitter but... is it worth it?
+      this._eventHandlers,
+    );
+  }
 }
 
-export class EventEmitter<T> {
-  private readonly _eventHandlers: EventHandlerDictionary<T>;
-  private readonly _onError:
-    | EventHandler<ErrorWithinEventHandler<T>, boolean>
-    | undefined;
+type EventHandlersHelper<T> = Record<string, Array<EventHandler<T[keyof T]>>>;
 
+export class EventEmitter<T> {
   public constructor(
-    eventHandlers: EventHandlerDictionary<T>,
-    onError?: EventHandler<unknown, boolean>,
-  ) {
-    this._eventHandlers = eventHandlers;
-    this._onError = onError;
-  }
+    private readonly _eventHandlers: EventHandlerDictionary<T>,
+    private readonly _onError?: EventHandler<
+      ErrorWithinEventHandler<T>,
+      boolean
+    >,
+  ) {}
 
   public emit<TEventName extends keyof T>(
     eventName: TEventName,
@@ -160,7 +166,37 @@ export class EventEmitter<T> {
       }
     }
   }
+
+  public combine(
+    other: EventEmitterBuilder<T> | EventEmitter<T>,
+    onError?: EventHandler<ErrorWithinEventHandler<T>, boolean>,
+  ) {
+    const newEventHandlers = objs.deepCopy(this._eventHandlers);
+    combine(
+      (other as EventEmitter<T>)._eventHandlers, // Fugly, but what can you do, when no 'internal' modifier available... Maybe can add "createEventHandlersCopy" to EventEmitter but... is it worth it?
+      newEventHandlers,
+    );
+
+    return new EventEmitter<T>(newEventHandlers, onError);
+  }
 }
+
+const combine = <T>(
+  otherEventHandlers: EventHandlerDictionary<T>,
+  thisEventHanders: EventHandlerDictionary<T>,
+) => {
+  for (const [eventID, eventArray] of Object.entries(
+    (otherEventHandlers as unknown) as EventHandlersHelper<T>,
+  )) {
+    dicts
+      .getOrAddGeneric(
+        (thisEventHanders as unknown) as EventHandlersHelper<T>,
+        eventID,
+        () => [],
+      )
+      .push(...eventArray);
+  }
+};
 
 export interface ConsoleAbstraction {
   log: (msg: string) => void;

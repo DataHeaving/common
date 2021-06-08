@@ -1,23 +1,25 @@
-export function deepCopy<T, TKey extends keyof T = keyof T>(
+export function deepCopyWithProperties<T, TKey extends keyof T = keyof T>(
   source: T,
   copyableProperties?: ReadonlyArray<TKey>,
 ): { [P in TKey]: T[P] } {
   return copyableProperties
     ? copyableProperties.reduce<{ [P in TKey]: T[P] }>(
         (newObject, propertyName) => {
-          newObject[propertyName] = deepCopyImpl(source[propertyName]);
+          newObject[propertyName] = deepCopy(source[propertyName]);
           return newObject;
         },
         ({} as unknown) as { [P in TKey]: T[P] },
       )
-    : (deepCopyImpl(source) as { [P in TKey]: T[P] });
+    : (deepCopy(source) as { [P in TKey]: T[P] });
 }
 
-function deepCopyImpl<T>(source: T): T {
+export function deepCopy<T>(source: T): T {
   switch (typeof source) {
     case "object":
       if (Array.isArray(source)) {
-        return (source.map((item) => deepCopy(item)) as unknown) as T;
+        return (source.map(
+          (item) => deepCopy(item) as unknown,
+        ) as unknown) as T;
       } else {
         return (Object.fromEntries(
           Object.entries(source).map(([propertyName, propertyValue]) => [
