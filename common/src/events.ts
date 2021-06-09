@@ -14,6 +14,10 @@ type EventHandlerDictionary<T> = Partial<
   { [P in keyof T]: Array<EventHandler<T[P]>> }
 >;
 
+export type ScopedEventSpecification<T, TScoped extends keyof T> = {
+  [P in TScoped]: Partial<{ [M in keyof T[P]]: T[P][M] }>;
+};
+
 export interface EventEmitterRegistrationAddition<T> {
   addEventListener<TEventName extends keyof T>(
     eventName: TEventName,
@@ -66,48 +70,24 @@ export class EventEmitterBuilder<T>
   public createEventEmitter(onError?: EventHandler<unknown, boolean>) {
     // Create a copy of each array so that possible modifications done to them by EventEmitter are not visible to here.
     return new EventEmitter<T>(
-      Object.fromEntries(
-        Object.entries(
-          this._eventHandlers as Record<string, Array<unknown>>,
-        ).map(([eventName, eventHandlers]) => [
-          eventName,
-          eventHandlers.slice(),
-        ]),
-      ) as EventHandlerDictionary<T>,
+      copyEventsDictionary(this._eventHandlers, (arr) => arr.slice()),
       onError,
     );
   }
 
   public createScopedEventBuilder<TScoped extends keyof T>(
-    scopedEvents: { [P in TScoped]: Partial<{ [M in keyof T[P]]: T[P][M] }> },
+    scopedEvents: ScopedEventSpecification<T, TScoped>,
   ): EventEmitterRegistrationAddition<
     { [P in keyof typeof scopedEvents]: T[P] }
   > {
-    if (
-      Object.values(scopedEvents).some(
-        (val) => Object.getOwnPropertyNames(val).length <= 0,
-      )
-    ) {
-      throw new Error(
-        "All event matchers must contain at least one matchable element",
-      );
-    }
+    checkScopedSpec(scopedEvents);
     return {
       addEventListener: (eventName, eventHandler) => {
         if (eventName in scopedEvents) {
-          const thisMatches = scopedEvents[eventName];
-          this.addEventListener(eventName, (arg) => {
-            let isMatch = true;
-            for (const key in thisMatches) {
-              if (arg[key] !== thisMatches[key]) {
-                isMatch = false;
-                break;
-              }
-            }
-            if (isMatch) {
-              eventHandler(arg);
-            }
-          });
+          this.addEventListener(
+            eventName,
+            getScopedEventHandler(scopedEvents, eventHandler, eventName),
+          );
         }
       },
     };
@@ -179,6 +159,28 @@ export class EventEmitter<T> {
 
     return new EventEmitter<T>(newEventHandlers, onError);
   }
+
+  public asScopedEventEmitter<TScoped extends keyof T>(
+    scopedEvents: ScopedEventSpecification<T, TScoped>,
+    onError?: EventHandler<ErrorWithinEventHandler<T>, boolean>,
+  ): EventEmitter<{ [P in keyof typeof scopedEvents]: T[P] }> {
+    checkScopedSpec(scopedEvents);
+    return new EventEmitter<{ [P in keyof typeof scopedEvents]: T[P] }>(
+      copyEventsDictionary(this._eventHandlers, (arr, eventName) => {
+        return eventName in scopedEvents
+          ? arr.map(
+              (handler) =>
+                getScopedEventHandler(
+                  scopedEvents,
+                  handler,
+                  eventName as TScoped,
+                ) as typeof arr[number],
+            )
+          : arr;
+      }),
+      onError,
+    );
+  }
 }
 
 const combine = <T>(
@@ -196,6 +198,59 @@ const combine = <T>(
       )
       .push(...eventArray);
   }
+};
+
+const copyEventsDictionary = <T>(
+  eventsDictionary: EventHandlerDictionary<T>,
+  copyArray: (
+    array: types.DeepReadOnly<EventHandlersHelper<T>[string]>,
+    eventName: keyof T,
+  ) => types.DeepReadOnly<EventHandlersHelper<T>[string]>,
+) =>
+  (Object.fromEntries(
+    Object.entries(
+      (eventsDictionary as unknown) as EventHandlersHelper<T>,
+    ).map(([eventName, eventHandlers]) => [
+      eventName,
+      copyArray(eventHandlers, eventName as keyof T),
+    ]),
+  ) as unknown) as EventHandlerDictionary<T>;
+
+const checkScopedSpec = <T, TScoped extends keyof T>(
+  scopedEvents: ScopedEventSpecification<T, TScoped>,
+) => {
+  if (
+    Object.values(scopedEvents).some(
+      (val) => Object.getOwnPropertyNames(val).length <= 0,
+    )
+  ) {
+    throw new Error(
+      "All event matchers must contain at least one matchable element",
+    );
+  }
+};
+
+// Important! This assumes that the check for eventName to be in scopedEvents has been done!
+const getScopedEventHandler = <T, TScoped extends keyof T>(
+  scopedEvents: ScopedEventSpecification<T, TScoped>,
+  eventHandler: EventHandler<T[TScoped]>,
+  eventName: TScoped,
+) => {
+  const thisMatches = scopedEvents[eventName];
+  const retVal: typeof eventHandler = (arg) => {
+    let isMatch = true;
+    for (const key in thisMatches) {
+      if (arg[key] !== thisMatches[key]) {
+        isMatch = false;
+        break;
+      }
+    }
+    if (isMatch) {
+      eventHandler(arg);
+    }
+  };
+
+  return retVal;
 };
 
 export interface ConsoleAbstraction {
