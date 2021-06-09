@@ -15,9 +15,11 @@ export const dateToISOUTCString = (d?: Date) => {
 export type DePromisify<T> = T extends Promise<infer U> ? U : never;
 export type DeepReadOnly<T> = T extends Array<infer U>
   ? ReadonlyArray<DeepReadOnly<U>>
-  : {
+  : T extends Record<string, unknown>
+  ? {
       readonly [P in keyof T]: DeepReadOnly<T[P]>;
-    };
+    }
+  : T;
 export type DeepPartial<T> = {
   [P in keyof T]?: DeepPartial<T[P]>;
 };
