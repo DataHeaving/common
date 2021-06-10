@@ -70,35 +70,44 @@ export class EventEmitterBuilder<T>
   public createEventEmitter(onError?: EventHandler<unknown, boolean>) {
     // Create a copy of each array so that possible modifications done to them by EventEmitter are not visible to here.
     return new EventEmitter<T>(
-      copyEventsDictionary(this._eventHandlers, (arr) => arr.slice()),
+      (Object.fromEntries(
+        Object.entries(
+          (this._eventHandlers as unknown) as EventHandlersHelper<T>,
+        ).map(([eventName, eventHandlers]) => [
+          eventName,
+          eventHandlers.slice(),
+        ]),
+      ) as unknown) as EventHandlerDictionary<T>,
       onError,
     );
   }
 
-  public createScopedEventBuilder<TScoped extends keyof T>(
-    scopedEvents: ScopedEventSpecification<T, TScoped>,
-  ): EventEmitterRegistrationAddition<
-    { [P in keyof typeof scopedEvents]: T[P] }
-  > {
-    checkScopedSpec(scopedEvents);
-    return {
-      addEventListener: (eventName, eventHandler) => {
-        if (eventName in scopedEvents) {
-          this.addEventListener(
-            eventName,
-            getScopedEventHandler(scopedEvents, eventHandler, eventName),
-          );
-        }
-      },
-    };
-  }
+  // These two methods (createScopedEventBuilder and combine) caused bottommost code in events.spec.ts to produce compile errors.
+  // The scoped events + combining was refactored to separate methods, but leaving this comments + old code here 'for future generations to know'.
+  // public createScopedEventBuilder<TScoped extends keyof T>(
+  //   scopedEvents: ScopedEventSpecification<T, TScoped>,
+  // ): EventEmitterRegistrationAddition<
+  //   { [P in keyof typeof scopedEvents]: T[P] }
+  // > {
+  //   checkScopedSpec(scopedEvents);
+  //   return {
+  //     addEventListener: (eventName, eventHandler) => {
+  //       if (eventName in scopedEvents) {
+  //         this.addEventListener(
+  //           eventName,
+  //           getScopedEventHandler(scopedEvents, eventHandler, eventName),
+  //         );
+  //       }
+  //     },
+  //   };
+  // }
 
-  public combine(other: EventEmitterBuilder<T> | EventEmitter<T>) {
-    combine(
-      (other as EventEmitterBuilder<T>)._eventHandlers, // Fugly, but what can you do, when no 'internal' modifier available... Maybe can add "createEventHandlersCopy" to EventEmitter but... is it worth it?
-      this._eventHandlers,
-    );
-  }
+  // public combine(other: EventEmitterBuilder<T> | EventEmitter<T>) {
+  //   combine(
+  //     (other as EventEmitterBuilder<T>)._eventHandlers, // Fugly, but what can you do, when no 'internal' modifier available... Maybe can add "createEventHandlersCopy" to EventEmitter but... is it worth it?
+  //     this._eventHandlers,
+  //   );
+  // }
 }
 
 type EventHandlersHelper<T> = Record<string, Array<EventHandler<T[keyof T]>>>;
@@ -147,76 +156,75 @@ export class EventEmitter<T> {
     }
   }
 
-  public combine(
-    other: EventEmitterBuilder<T> | EventEmitter<T>,
-    onError?: EventHandler<ErrorWithinEventHandler<T>, boolean>,
-  ) {
-    const newEventHandlers = objs.deepCopy(this._eventHandlers);
-    combine(
-      (other as EventEmitter<T>)._eventHandlers, // Fugly, but what can you do, when no 'internal' modifier available... Maybe can add "createEventHandlersCopy" to EventEmitter but... is it worth it?
-      newEventHandlers,
-    );
+  // These two methods (createScopedEventBuilder and combine) caused bottommost code in events.spec.ts to produce compile errors.
+  // The scoped events + combining was refactored to separate methods, but leaving this comments + old code here 'for future generations to know'.
+  // public combine(
+  //   other: EventEmitterBuilder<T> | EventEmitter<T>,
+  //   onError?: EventHandler<ErrorWithinEventHandler<T>, boolean>,
+  // ) {
+  //   const newEventHandlers = objs.deepCopy(this._eventHandlers);
+  //   combine(
+  //     (other as EventEmitter<T>)._eventHandlers, // Fugly, but what can you do, when no 'internal' modifier available... Maybe can add "createEventHandlersCopy" to EventEmitter but... is it worth it?
+  //     newEventHandlers,
+  //   );
 
-    return new EventEmitter<T>(newEventHandlers, onError);
-  }
+  //   return new EventEmitter<T>(newEventHandlers, onError);
+  // }
 
-  public asScopedEventEmitter<TScoped extends keyof T>(
-    scopedEvents: ScopedEventSpecification<T, TScoped>,
-    onError?: EventHandler<ErrorWithinEventHandler<T>, boolean>,
-  ): EventEmitter<{ [P in keyof typeof scopedEvents]: T[P] }> {
-    checkScopedSpec(scopedEvents);
-    return new EventEmitter<{ [P in keyof typeof scopedEvents]: T[P] }>(
-      copyEventsDictionary(this._eventHandlers, (arr, eventName) => {
-        return eventName in scopedEvents
-          ? arr.map(
-              (handler) =>
-                getScopedEventHandler(
-                  scopedEvents,
-                  handler,
-                  eventName as TScoped,
-                ) as typeof arr[number],
-            )
-          : arr;
-      }),
-      onError,
-    );
-  }
+  // public asScopedEventEmitter<TScoped extends keyof T>(
+  //   scopedEvents: ScopedEventSpecification<T, TScoped>,
+  //   onError?: EventHandler<ErrorWithinEventHandler<T>, boolean>,
+  // ): EventEmitter<{ [P in keyof typeof scopedEvents]: T[P] }> {
+  //   checkScopedSpec(scopedEvents);
+  //   return new EventEmitter<{ [P in keyof typeof scopedEvents]: T[P] }>(
+  //     copyEventsDictionary(this._eventHandlers, (arr, eventName) => {
+  //       return eventName in scopedEvents
+  //         ? arr.map(
+  //             (handler) =>
+  //               getScopedEventHandler(
+  //                 scopedEvents,
+  //                 handler,
+  //                 eventName as TScoped,
+  //               ) as typeof arr[number],
+  //           )
+  //         : arr;
+  //     }),
+  //     onError,
+  //   );
+  // }
 }
 
-const combine = <T>(
-  otherEventHandlers: EventHandlerDictionary<T>,
-  thisEventHanders: EventHandlerDictionary<T>,
+export const combineEvents = <T, U>(
+  first: EventEmitterBuilder<T> | EventEmitter<T>,
+  second: EventEmitterBuilder<U> | EventEmitter<U>,
 ) => {
+  // Copy first one
+  const eventsCopy = objs.deepCopy(
+    ((first as unknown) as WithEventDictionary<T | U>)._eventHandlers,
+  );
+  // Then iterate second one and merge arrays as needed
   for (const [eventID, eventArray] of Object.entries(
-    (otherEventHandlers as unknown) as EventHandlersHelper<T>,
+    (((second as unknown) as WithEventDictionary<U>)
+      ._eventHandlers as unknown) as EventHandlersHelper<U>,
   )) {
     dicts
       .getOrAddGeneric(
-        (thisEventHanders as unknown) as EventHandlersHelper<T>,
+        (eventsCopy as unknown) as EventHandlersHelper<U>,
         eventID,
         () => [],
       )
       .push(...eventArray);
   }
+
+  const retVal = new EventEmitterBuilder<T | U>();
+  ((retVal as unknown) as WithEventDictionary<
+    T | U
+  >)._eventHandlers = eventsCopy;
+  return retVal;
 };
 
-const copyEventsDictionary = <T>(
-  eventsDictionary: EventHandlerDictionary<T>,
-  copyArray: (
-    array: types.DeepReadOnly<EventHandlersHelper<T>[string]>,
-    eventName: keyof T,
-  ) => types.DeepReadOnly<EventHandlersHelper<T>[string]>,
-) =>
-  (Object.fromEntries(
-    Object.entries(
-      (eventsDictionary as unknown) as EventHandlersHelper<T>,
-    ).map(([eventName, eventHandlers]) => [
-      eventName,
-      copyArray(eventHandlers, eventName as keyof T),
-    ]),
-  ) as unknown) as EventHandlerDictionary<T>;
-
-const checkScopedSpec = <T, TScoped extends keyof T>(
+export const scopeEvents = <T, TScoped extends keyof T>(
+  events: EventEmitter<T> | EventEmitterBuilder<T>,
   scopedEvents: ScopedEventSpecification<T, TScoped>,
 ) => {
   if (
@@ -228,30 +236,38 @@ const checkScopedSpec = <T, TScoped extends keyof T>(
       "All event matchers must contain at least one matchable element",
     );
   }
+
+  const currentEvents = (((events as unknown) as WithEventDictionary<T>)
+    ._eventHandlers as unknown) as EventHandlersHelper<T>;
+  const newEvents: Partial<{ [P in TScoped]: Array<EventHandler<T[P]>> }> = {};
+  for (const scopedEventID of Object.keys(scopedEvents)) {
+    newEvents[scopedEventID as TScoped] = (
+      currentEvents[scopedEventID] ?? []
+    ).map((handler) => {
+      const thisMatches = scopedEvents[scopedEventID as TScoped];
+      const retVal: typeof handler = (arg) => {
+        let isMatch = true;
+        for (const key in thisMatches) {
+          if (arg[key] !== thisMatches[key]) {
+            isMatch = false;
+            break;
+          }
+        }
+        if (isMatch) {
+          handler(arg);
+        }
+      };
+
+      return retVal;
+    });
+  }
+
+  return new EventEmitter<{ [P in TScoped]: T[P] }>(newEvents);
 };
 
-// Important! This assumes that the check for eventName to be in scopedEvents has been done!
-const getScopedEventHandler = <T, TScoped extends keyof T>(
-  scopedEvents: ScopedEventSpecification<T, TScoped>,
-  eventHandler: EventHandler<T[TScoped]>,
-  eventName: TScoped,
-) => {
-  const thisMatches = scopedEvents[eventName];
-  const retVal: typeof eventHandler = (arg) => {
-    let isMatch = true;
-    for (const key in thisMatches) {
-      if (arg[key] !== thisMatches[key]) {
-        isMatch = false;
-        break;
-      }
-    }
-    if (isMatch) {
-      eventHandler(arg);
-    }
-  };
-
-  return retVal;
-};
+interface WithEventDictionary<T> {
+  _eventHandlers: EventHandlerDictionary<T>;
+}
 
 export interface ConsoleAbstraction {
   log: (msg: string) => void;

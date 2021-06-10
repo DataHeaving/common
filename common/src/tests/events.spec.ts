@@ -47,18 +47,25 @@ test("Combining event builders works as intended", (t) => {
   const builder2 = new spec.EventEmitterBuilder<VirtualEvents>();
   builder2.addEventListener("dummy", handler2);
 
-  builder2.combine(builder1);
+  const builderCombined = spec.combineEvents(builder1, builder2);
 
-  const emitterCombined = builder2.createEventEmitter();
+  const emitterCombined = builderCombined.createEventEmitter();
   emitterCombined.emit("dummy", undefined);
   t.true(invoked1);
   t.true(invoked2);
   invoked1 = invoked2 = false;
 
-  const emitter = builder1.createEventEmitter();
-  emitter.emit("dummy", undefined);
+  const emitter1 = builder1.createEventEmitter();
+  emitter1.emit("dummy", undefined);
   t.true(invoked1);
   t.false(invoked2);
+  invoked1 = invoked2 = false;
+
+  const emitter2 = builder2.createEventEmitter();
+  emitter2.emit("dummy", undefined);
+  t.false(invoked1);
+  t.true(invoked2);
+  invoked1 = invoked2 = false;
 });
 
 test("Combining event emitters works as intended", (t) => {
@@ -76,7 +83,7 @@ test("Combining event emitters works as intended", (t) => {
   builder2.addEventListener("dummy", handler2);
   const emitter2 = builder2.createEventEmitter();
 
-  const combined = emitter1.combine(emitter2);
+  const combined = spec.combineEvents(emitter1, emitter2).createEventEmitter();
   combined.emit("dummy", undefined);
   t.true(invoked1);
   t.true(invoked2);
@@ -97,28 +104,45 @@ test("Scoped event emitter works as intended", (t) => {
   const builder2 = new spec.EventEmitterBuilder<VirtualEventsWithID>();
   builder2.addEventListener("event", handler2);
 
-  const emitter = new spec.EventEmitter<VirtualEventsWithID>({})
-    .combine(
-      builder1.createEventEmitter().asScopedEventEmitter({
-        event: {
-          id: ID1,
-        },
-      }),
-    )
-    .combine(
-      builder2.createEventEmitter().asScopedEventEmitter({
-        event: {
-          id: ID2,
-        },
-      }),
-    );
+  let scopedBuilder = new spec.EventEmitterBuilder<VirtualEventsWithID>();
+  scopedBuilder = spec.combineEvents(
+    scopedBuilder,
+    spec.scopeEvents(builder1, {
+      event: {
+        id: ID1,
+      },
+    }),
+  );
+  scopedBuilder = spec.combineEvents(
+    scopedBuilder,
+    spec.scopeEvents(builder2, {
+      event: {
+        id: ID2,
+      },
+    }),
+  );
 
+  const emitter = scopedBuilder.createEventEmitter();
   emitter.emit("event", { id: ID1 });
   t.true(invoked1);
   t.false(invoked2);
-  invoked1 = false;
+  invoked1 = invoked2 = false;
 
   emitter.emit("event", { id: ID2 });
   t.false(invoked1);
   t.true(invoked2);
+  invoked1 = invoked2 = false;
 });
+
+// This code is here only to make sure that common pattern of using event handlers compiles successfully
+interface VirtualEventsBase {
+  dummy: void;
+}
+const setupBuilder = (builder: spec.EventEmitterBuilder<VirtualEventsBase>) => {
+  builder.addEventListener("dummy", () => {});
+};
+
+type VirtualEventsSub = VirtualEventsBase & {
+  another: void;
+};
+setupBuilder(new spec.EventEmitterBuilder<VirtualEventsSub>()); // This line will give compilation errors if combine/scoped event methods are present in builder/emitter.
