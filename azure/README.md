@@ -1,4 +1,6 @@
 # Data Heaving - Common-Azure
+[![Code Coverage](https://codecov.io/gh/DataHeaving/common/branch/develop/graph/badge.svg?flag=azure)](https://codecov.io/gh/DataHeaving/common)
+
 This folder contains source code for `@data-heaving/common-azure` NPM package.
 The exported entities include:
 - Helper methods for using Azure Authentication, and
