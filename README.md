@@ -1,9 +1,5 @@
 # Data Heaving - Common
-![CD][CD Pipeline]
-![Build][CI Pipeline]
 [![Code Coverage](https://codecov.io/gh/DataHeaving/common/branch/develop/graph/badge.svg?token=3wU8jzhccY)](https://codecov.io/gh/DataHeaving/common)
-
-[![MIT License][license-shield]][license-url]
 
 This repository is part of [Data Heaving project](https://github.com/DataHeaving).
 There are multiple packages in the repository, all of which could be thought as in some way common to other packages of the Data Heaving project:
