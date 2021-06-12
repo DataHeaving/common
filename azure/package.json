@@ -48,6 +48,11 @@
     "files": [
       "dist/cjs/**/tests/*.js"
     ],
-    "timeout": "10m"
+    "timeout": "10m",
+    "environmentVariables": {
+      "NODE_ENV": "DEV",
+      "ANOTHER_VAR": "DEV",
+      "YET_ANOTHER_VAR": "SOME_VAL"
+    }
   }
 }
