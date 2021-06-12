@@ -7,5 +7,9 @@ module.exports = {
   "exclude": [
     "**/*.spec.js",
     "dist/**/*.d.ts"
+  ],
+  "reporter": [
+    "text",
+    "json"
   ]
 }
