@@ -5,14 +5,14 @@ import * as common from "@data-heaving/common";
 export const decodeOrThrow = <TType, TInput>(
   decode: (i: TInput) => t.Validation<TType>,
   input: TInput,
-  customError?: () => unknown,
+  customError?: (result: t.Validation<TType>) => unknown,
 ) => {
   const resultOrError = decode(input);
   if (resultOrError._tag === "Right") {
     return resultOrError.right;
   } else {
     if (customError) {
-      customError();
+      customError(resultOrError);
     }
     throw new Error(PathReporter.report(resultOrError).join("\n"));
   }
@@ -24,11 +24,9 @@ export const decodeOrDefault = <TType, TInput, TError = undefined>(
   customError?: (error: t.Validation<TType>) => TError,
 ) => {
   const resultOrError = decode(input);
-  if (resultOrError._tag === "Right") {
-    return resultOrError.right;
-  } else {
-    return customError?.(resultOrError);
-  }
+  return resultOrError._tag === "Right"
+    ? resultOrError.right
+    : customError?.(resultOrError);
 };
 
 export const decodePartialOrThrow = <TType>(

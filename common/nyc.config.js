@@ -5,7 +5,7 @@ module.exports = {
     "src/*"
   ],
   "exclude": [
-    "**/*.spec.js",
+    "**/*.spec.[jt]s",
     "dist/**/*.d.ts"
   ],
   "reporter": [

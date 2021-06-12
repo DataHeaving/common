@@ -71,7 +71,7 @@ const isManagedID = (
 
 const isSomeID = (
   t: ExecutionContext,
-  clazz: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  clazz: new (...args: any[]) => any, // eslint-disable-line @typescript-eslint/no-explicit-any
   ...args: Parameters<typeof spec.getEnvOrManagedIDAuth>
 ) => {
   const auth = spec.getEnvOrManagedIDAuth(...args);
