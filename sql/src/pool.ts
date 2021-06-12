@@ -5,7 +5,7 @@ export interface SQLConnectionPoolAbstraction<TPool, TConnection> {
   getConnection: (
     pool: TPool,
     eventEmitter: events.SQLEventEmitter | undefined,
-  ) => Promise<[TConnection, CloseConnection]>;
+  ) => Promise<readonly [TConnection, CloseConnection]>;
 }
 export type CloseConnection = () => Promise<void>;
 
@@ -14,7 +14,9 @@ export const useConnectionPoolAsync = async <TPool, TConnection, T>(
   eventEmitter: events.SQLEventEmitter | undefined,
   use: (connection: TConnection) => Promise<T>,
 ) => {
-  let connection: [TConnection, CloseConnection] | undefined = undefined;
+  let connection:
+    | readonly [TConnection, CloseConnection]
+    | undefined = undefined;
   try {
     connection = await getConnection(pool, eventEmitter);
     return await use(connection[0]);
