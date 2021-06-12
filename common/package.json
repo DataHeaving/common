@@ -13,15 +13,13 @@
   },
   "scripts": {
     "build": "npm run tsc && npm run lint",
-    "report-coverage": "codecov",
     "tsc": "tsc --project tsconfig.json && tsc --project tsconfig.json --outDir ./dist/esm --module ES2020",
     "prepublishOnly": "rm -rf dist && npm run build && npm run test && npm run remove-test-files",
     "lint": "eslint ./src --ext .ts,.tsx",
     "watch": "tsc -w",
     "test": "nyc ava",
     "remove-test-files": "rm -rf dist/*/tests src/*/tests",
-    "nyc": "nyc",
-    "codecov": "codecov"
+    "report-coverage": "codecov"
   },
   "devDependencies": {
     "@types/node": "14.14.31",

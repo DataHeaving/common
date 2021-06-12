@@ -1,0 +1,36 @@
+# adding Flags to your `layout` configuration to show up in the PR comment
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: default
+  require_changes: false  
+  require_base: yes
+  require_head: yes       
+  branches: null
+coverage:
+  status:
+    # pull-requests only
+    patch:
+      default:
+        threshold: 1%
+flags:
+  common:
+    paths: 
+      - common/src
+  projectB:
+    paths:
+      - src/projectB/
+  
+# To see status checks based on flags
+coverage:
+  status:
+    project:
+      default:
+        flags:
+          - projectA
+          - projectB
+      projectA:
+        flags:
+          - projectA
+      projectB:
+        flags:
+          - projectB
