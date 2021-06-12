@@ -44,7 +44,6 @@ jobs:
           npm ci
           npm run build
           npm run test
-          # npm run report-coverage -- '--flags=${{ matrix.dir }}' --root="$(realpath "$(pwd)/..")"
       - uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
