@@ -43,4 +43,4 @@ jobs:
           npm ci
           npm run build
           npm run test
-          npm run report-coverage -- --flags ${{ matrix.dir }}
+          npm run report-coverage -- --flags ${{ matrix.dir }} --root "$(realpath "$(pwd)/..")"

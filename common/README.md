@@ -1,10 +1,4 @@
 # Data Heaving - Common
-![CD][CD Pipeline]
-![Build][CI Pipeline]
-[![Code Coverage](https://codecov.io/gh/DataHeaving/common/branch/develop/graph/badge.svg?token=3wU8jzhccY)](https://codecov.io/gh/DataHeaving/common)
-
-[![MIT License][license-shield]][license-url]
-
 This folder contains source code for `@data-heaving/common` NPM package.
 The exported entities include:
 - Commonly used helper methods for dictionaries and arrays

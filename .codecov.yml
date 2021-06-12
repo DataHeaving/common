@@ -6,31 +6,44 @@ comment:
   require_base: yes
   require_head: yes       
   branches: null
-coverage:
-  status:
-    # pull-requests only
-    patch:
-      default:
+
+flag_management:
+  # this section will govern all default rules of Flags
+  default_rules:
+    statuses:
+      - name_prefix: project-
+        type: project
+        target: auto
         threshold: 1%
-flags:
-  common:
-    paths: 
-      - common/src
-  projectB:
-    paths:
-      - src/projectB/
+      - name_prefix: patch-
+        type: patch
+        target: auto
+        threshold: 1%
+# coverage:
+#   status:
+#     # pull-requests only
+#     patch:
+#       default:
+#         threshold: 1%
+# flags:
+#   common:
+#     paths: 
+#       - common/src
+#   projectB:
+#     paths:
+#       - src/projectB/
   
-# To see status checks based on flags
-coverage:
-  status:
-    project:
-      default:
-        flags:
-          - projectA
-          - projectB
-      projectA:
-        flags:
-          - projectA
-      projectB:
-        flags:
-          - projectB
+# # To see status checks based on flags
+# coverage:
+#   status:
+#     project:
+#       default:
+#         flags:
+#           - projectA
+#           - projectB
+#       projectA:
+#         flags:
+#           - projectA
+#       projectB:
+#         flags:
+#           - projectB
