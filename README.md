@@ -1,4 +1,6 @@
 # Data Heaving - Common
+[![Code Coverage](https://codecov.io/gh/DataHeaving/common/branch/develop/graph/badge.svg)](https://codecov.io/gh/DataHeaving/common)
+
 This repository is part of [Data Heaving project](https://github.com/DataHeaving).
 There are multiple packages in the repository, all of which could be thought as in some way common to other packages of the Data Heaving project:
 - [Common](common) package for most fundamental type definitions and useful operations for objects, in addition to event-oriented API,

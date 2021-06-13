@@ -1,4 +1,6 @@
 # Data Heaving - Common-SQL
+[![Code Coverage](https://codecov.io/gh/DataHeaving/common/branch/develop/graph/badge.svg?flag=sql)](https://codecov.io/gh/DataHeaving/common)
+
 This folder contains source code for `@data-heaving/common-sql` NPM package.
 The exported entities include:
 - Connection pool and connection instance abstractions, and

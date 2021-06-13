@@ -8,8 +8,9 @@ export type MakeRequired<T, Props extends keyof T> = Omit<T, Props> &
   { [P in Props]-?: T[P] };
 
 export const dateToISOUTCString = (d?: Date) => {
-  const isoString = (d || new Date()).toISOString();
-  return isoString.endsWith("Z") ? isoString : `${isoString}Z`;
+  // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString
+  // String always ends with 'Z' so we don't need to check for that
+  return (d || new Date()).toISOString();
 };
 
 export type DePromisify<T> = T extends Promise<infer U> ? U : never;

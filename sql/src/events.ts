@@ -1,4 +1,4 @@
-import * as utils from "@data-heaving/common";
+import * as common from "@data-heaving/common";
 
 // This is virtual interface - no instances implementing this are ever created
 export interface VirtualSQLEvents {
@@ -6,24 +6,25 @@ export interface VirtualSQLEvents {
   sqlExecutionEnded: string;
 }
 
-export type SQLEventEmitter = utils.EventEmitter<VirtualSQLEvents>;
+export type SQLEventEmitter = common.EventEmitter<VirtualSQLEvents>;
 
 export const createEventEmitterBuilder = () =>
-  new utils.EventEmitterBuilder<VirtualSQLEvents>();
+  new common.EventEmitterBuilder<VirtualSQLEvents>();
 
 export const consoleLoggingEventEmitterBuilder = (
-  logMessagePrefix?: Parameters<typeof utils.createConsoleLogger>[0],
-  builder?: utils.EventEmitterBuilder<VirtualSQLEvents>,
-  printSQL?:
-    | "onlyStart"
-    | "onlyEnd"
-    | "startAndEnd" /*logCompressionCycles?: boolean*/,
+  logMessagePrefix?: Parameters<typeof common.createConsoleLogger>[0],
+  builder?: common.EventEmitterBuilder<VirtualSQLEvents>,
+  printSQL?: "onlyStart" | "onlyEnd" | "startAndEnd",
+  consoleAbstraction?: common.ConsoleAbstraction,
 ) => {
   if (!builder) {
     builder = createEventEmitterBuilder();
   }
   if (printSQL) {
-    const logger = utils.createConsoleLogger(logMessagePrefix);
+    const logger = common.createConsoleLogger(
+      logMessagePrefix,
+      consoleAbstraction,
+    );
     if (printSQL === "onlyStart" || printSQL === "startAndEnd") {
       builder.addEventListener("sqlExecutionStarted", (sql) =>
         logger(`SQL started: ${sql}`),

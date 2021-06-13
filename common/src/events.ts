@@ -67,7 +67,7 @@ export class EventEmitterBuilder<T>
     );
   }
 
-  public createEventEmitter(onError?: EventHandler<unknown, boolean>) {
+  public createEventEmitter() {
     // Create a copy of each array so that possible modifications done to them by EventEmitter are not visible to here.
     return new EventEmitter<T>(
       (Object.fromEntries(
@@ -78,7 +78,6 @@ export class EventEmitterBuilder<T>
           eventHandlers.slice(),
         ]),
       ) as unknown) as EventHandlerDictionary<T>,
-      onError,
     );
   }
 
@@ -126,7 +125,7 @@ export class EventEmitter<T> {
     arg: T[TEventName],
   ) {
     const handlers = this._eventHandlers[eventName];
-    if (handlers) {
+    if (handlers && handlers.length > 0) {
       let i = 0;
       while (i < handlers.length) {
         let removeElement = false;
@@ -193,6 +192,22 @@ export class EventEmitter<T> {
   //   );
   // }
 }
+
+// This method is here because having optional arg within class method will cause compilation error on common use case for event builders, and passing error handler is not that common
+export const createEventEmitterWithErrorHandler = <T>(
+  builder: EventEmitterBuilder<T>,
+  onError: EventHandler<ErrorWithinEventHandler<T>, boolean>,
+) =>
+  // Create a copy of each array so that possible modifications done to them by EventEmitter are not visible to here.
+  new EventEmitter<T>(
+    (Object.fromEntries(
+      Object.entries(
+        (((builder as unknown) as WithEventDictionary<T>)
+          ._eventHandlers as unknown) as EventHandlersHelper<T>,
+      ).map(([eventName, eventHandlers]) => [eventName, eventHandlers.slice()]),
+    ) as unknown) as EventHandlerDictionary<T>,
+    onError,
+  );
 
 export const combineEvents = <T, U>(
   first: EventEmitterBuilder<T> | EventEmitter<T>,

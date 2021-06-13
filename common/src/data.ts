@@ -70,7 +70,7 @@ export const runPipelineWithBufferedData = async <TContext, TDatum>(
   await iteration.iterateInParallel(
     data,
     concurrencyLevel,
-    async (datum, concurrencyContext) => {
+    async (datum, _, concurrencyContext) => {
       let storing = concurrencyContext.storing;
       if (!storing) {
         storing = datumStoring(context, () => {
