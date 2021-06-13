@@ -1,4 +1,4 @@
-import * as utils from "@data-heaving/common";
+import * as common from "@data-heaving/common";
 
 export type TSQLRow = ReadonlyArray<unknown> | undefined;
 
@@ -10,12 +10,12 @@ export interface SQLConnectionReaderAbstraction<
   defaultPrepareRequest: (req: TIntermediateRequest) => TFinalRequest;
   streamQuery: (
     options: QueryExecutionParametersWithRequest<TFinalRequest>,
-    controlFlow: utils.ControlFlow | undefined,
+    controlFlow: common.ControlFlow | undefined,
   ) => Promise<unknown>;
 }
 export type RowTransformer<T, TRow = ReadonlyArray<unknown>> = (
   row: TRow,
-  controlFlow: utils.ControlFlow | undefined,
+  controlFlow: common.ControlFlow | undefined,
 ) => T;
 
 export interface QueryExecutionParametersBase<
@@ -50,12 +50,13 @@ export type QueryExecutionParameters<
 export type QueryExecutionParametersSingle<
   TIntermediateRequest,
   TFinalRequest,
-  TResult
+  TResult,
+  TRow = ReadonlyArray<unknown>
 > = QueryExecutionParameters<
   TIntermediateRequest,
   TFinalRequest,
   TResult,
-  unknown
+  TRow
 > & {
   strict?: boolean;
 };
@@ -78,20 +79,23 @@ export const getQuerySingleValue = async <
   opts: QueryExecutionParametersSingle<
     TIntermediateRequest,
     TFinalRequest,
-    TResult
-  >,
+    TResult,
+    unknown
+  > & { columnIndex?: number },
 ) => {
   let retVal: TResult | undefined = undefined;
   let resultSet = false;
   await streamQuery({
     ...opts,
     onRow: (...args) => {
-      if (resultSet && opts.strict === true) {
-        throw new Error("Expected exactly one row but got more.");
+      if (resultSet) {
+        if (opts.strict === true) {
+          throw new Error("Expected exactly one row but got more.");
+        }
       } else {
+        retVal = opts.onRow(args[0][opts?.columnIndex ?? 0], args[1]);
         resultSet = true;
       }
-      retVal = opts.onRow(args[0][0], args[1]);
     },
   });
 
@@ -115,15 +119,17 @@ export const getQuerySingleRow = async <
 ) => {
   let retVal: TResult | undefined = undefined;
   let resultSet = false;
-  await streamQueryResults({
+  await streamQuery({
     ...opts,
     onRow: (...args) => {
-      if (resultSet && opts.strict === true) {
-        throw new Error("Expected exactly one row but got more.");
+      if (resultSet) {
+        if (opts.strict === true) {
+          throw new Error("Expected exactly one row but got more.");
+        }
       } else {
+        retVal = opts.onRow(args[0], args[1]);
         resultSet = true;
       }
-      retVal = opts.onRow(args[0][1], args[1]);
     },
   });
 
@@ -168,7 +174,7 @@ export const streamQueryOnRequest = async <TFinalRequest>(
     onDone,
     request,
   }: QueryExecutionParametersWithRequest<TFinalRequest>,
-  streamQuery: SQLConnectionReaderAbstraction<
+  connectionStreamQuery: SQLConnectionReaderAbstraction<
     unknown,
     TFinalRequest
   >["streamQuery"],
@@ -196,21 +202,21 @@ export const streamQueryOnRequest = async <TFinalRequest>(
         }
       : undefined;
 
-  const error = await streamQuery(
+  const error = await connectionStreamQuery(
     { sqlCommand, onRow, onDone, request },
     controlFlow,
   );
 
   if (error) {
-    throw error instanceof Error ? error : new Error(`${error}`);
+    throw error; // instanceof Error ? error : new Error(`${error}`);
   }
 };
 
-export class MultipleErrors extends Error {
-  public readonly errors: ReadonlyArray<unknown>;
+// export class MultipleErrors extends Error {
+//   public readonly errors: ReadonlyArray<unknown>;
 
-  public constructor(errorArray: ReadonlyArray<unknown>, message?: string) {
-    super(message);
-    this.errors = errorArray;
-  }
-}
+//   public constructor(errorArray: ReadonlyArray<unknown>, message?: string) {
+//     super(message);
+//     this.errors = errorArray;
+//   }
+// }

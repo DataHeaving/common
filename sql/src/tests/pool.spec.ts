@@ -1,7 +1,7 @@
 import test from "ava";
 import * as spec from "../pool";
 
-test("The useConnectionPoolAsync calls all callbacks", async (t) => {
+test("The useConnectionPoolAsync calls all callbacks as expected", async (t) => {
   const pool = "Pool";
   const connection = "Connection";
   const eventEmitter = undefined;
@@ -52,4 +52,39 @@ test("The useConnectionPoolAsync calls all callbacks", async (t) => {
   t.true(useCalled);
   t.true(closeCalled);
   t.deepEqual(result, expectedResult);
+});
+
+test("The useConnectionPoolAsync behaves as expected when connection acquire callback throws", async (t) => {
+  const pool = "Pool";
+  const eventEmitter = undefined;
+  let getConnectionCalled = false;
+  let useCalled = false;
+  const errorToBeThrown = new Error("Error thrown by test");
+  await t.throwsAsync(
+    () =>
+      spec.useConnectionPoolAsync(
+        {
+          pool,
+          getConnection: (seenPool, seenEventEmitter) => {
+            t.false(getConnectionCalled);
+            t.false(useCalled);
+
+            getConnectionCalled = true;
+            t.true(seenPool === pool);
+            t.true(seenEventEmitter === eventEmitter);
+
+            throw errorToBeThrown;
+          },
+        },
+        eventEmitter,
+        () => {
+          useCalled = true;
+          return Promise.resolve();
+        },
+      ),
+    {
+      is: errorToBeThrown,
+    },
+  );
+  t.false(useCalled);
 });
