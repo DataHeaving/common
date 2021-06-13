@@ -1,19 +1,24 @@
-export function deepCopyWithProperties<T, TKey extends keyof T = keyof T>(
+export function deepCopy<T, TKey extends keyof T = keyof T>(
+  source: T,
+  copyableProperties: ReadonlyArray<TKey>,
+): { [P in TKey]: T[P] };
+export function deepCopy<T>(source: T): T;
+export function deepCopy<T, TKey extends keyof T = keyof T>(
   source: T,
   copyableProperties?: ReadonlyArray<TKey>,
 ): { [P in TKey]: T[P] } {
   return copyableProperties
     ? copyableProperties.reduce<{ [P in TKey]: T[P] }>(
         (newObject, propertyName) => {
-          newObject[propertyName] = deepCopy(source[propertyName]);
+          newObject[propertyName] = deepCopyFull(source[propertyName]);
           return newObject;
         },
         ({} as unknown) as { [P in TKey]: T[P] },
       )
-    : (deepCopy(source) as { [P in TKey]: T[P] });
+    : (deepCopyFull(source) as { [P in TKey]: T[P] });
 }
 
-export function deepCopy<T>(source: T): T {
+function deepCopyFull<T>(source: T): T {
   switch (typeof source) {
     case "object":
       if (Array.isArray(source)) {
@@ -33,111 +38,111 @@ export function deepCopy<T>(source: T): T {
   }
 }
 
-export type TPathComponent = string | number;
-export interface TDiffInfo {
-  path: ReadonlyArray<TPathComponent>;
-  change: "I" | "D" | "U";
-}
-export function calculateDiffPaths(x: unknown, y: unknown) {
-  const retVal: Array<TDiffInfo> = [];
-  calculateDiffPathsImpl(x, y, [], "", retVal);
-  return retVal;
-}
-function calculateDiffPathsImpl(
-  x: unknown,
-  y: unknown,
-  parentPaths: ReadonlyArray<TPathComponent>,
-  thisProperty: TPathComponent,
-  allResults: Array<TDiffInfo>,
-) {
-  let wasSimpleDifference = false;
-  switch (typeof x) {
-    case "object":
-      if (typeof y === "object") {
-        if (Array.isArray(x)) {
-          if (Array.isArray(y)) {
-            const max = Math.max(x.length, y.length);
-            let idx = 0;
-            while (idx < max) {
-              if (idx >= x.length) {
-                // y has extra element -> treat as insertion
-                allResults.push({
-                  path: parentPaths.concat([thisProperty, idx]),
-                  change: "I",
-                });
-              } else if (idx >= y.length) {
-                // x has extra element -> treat as deletion
-                allResults.push({
-                  path: parentPaths.concat([thisProperty, idx]),
-                  change: "D",
-                });
-              } else {
-                // Both elements present in array - perform recurive check
-                calculateDiffPathsImpl(
-                  x[idx],
-                  y[idx],
-                  parentPaths.concat(thisProperty),
-                  idx,
-                  allResults,
-                );
-              }
-              ++idx;
-            }
-          } else {
-            wasSimpleDifference = true;
-          }
-        } else {
-          if (x !== null && y !== null && !Array.isArray(y)) {
-            for (const key of new Set<string>(
-              Object.keys(x).concat(Object.keys(y)),
-            )) {
-              const isInX = key in x;
-              const isInY = key in y;
-              if (isInX && isInY) {
-                calculateDiffPathsImpl(
-                  (x as any)[key], // eslint-disable-line
-                  (y as any)[key], // eslint-disable-line
-                  parentPaths,
-                  key,
-                  allResults,
-                );
-              } else if (!isInX) {
-                // y has extra element - treat as insertion
-                allResults.push({
-                  path: parentPaths.concat(thisProperty),
-                  change: "I",
-                });
-              } else {
-                // x has extra element - treat as deletion
-                allResults.push({
-                  path: parentPaths.concat(thisProperty),
-                  change: "D",
-                });
-              }
-            }
-          } else {
-            wasSimpleDifference = true;
-          }
-        }
-      }
-      break;
-    default:
-      wasSimpleDifference = true;
-      break;
-  }
+// export type TPathComponent = string | number;
+// export interface TDiffInfo {
+//   path: ReadonlyArray<TPathComponent>;
+//   change: "I" | "D" | "U";
+// }
+// export function calculateDiffPaths(x: unknown, y: unknown) {
+//   const retVal: Array<TDiffInfo> = [];
+//   calculateDiffPathsImpl(x, y, [], "", retVal);
+//   return retVal;
+// }
+// function calculateDiffPathsImpl(
+//   x: unknown,
+//   y: unknown,
+//   parentPaths: ReadonlyArray<TPathComponent>,
+//   thisProperty: TPathComponent,
+//   allResults: Array<TDiffInfo>,
+// ) {
+//   let wasSimpleDifference = false;
+//   switch (typeof x) {
+//     case "object":
+//       if (typeof y === "object") {
+//         if (Array.isArray(x)) {
+//           if (Array.isArray(y)) {
+//             const max = Math.max(x.length, y.length);
+//             let idx = 0;
+//             while (idx < max) {
+//               if (idx >= x.length) {
+//                 // y has extra element -> treat as insertion
+//                 allResults.push({
+//                   path: parentPaths.concat([thisProperty, idx]),
+//                   change: "I",
+//                 });
+//               } else if (idx >= y.length) {
+//                 // x has extra element -> treat as deletion
+//                 allResults.push({
+//                   path: parentPaths.concat([thisProperty, idx]),
+//                   change: "D",
+//                 });
+//               } else {
+//                 // Both elements present in array - perform recurive check
+//                 calculateDiffPathsImpl(
+//                   x[idx],
+//                   y[idx],
+//                   parentPaths.concat(thisProperty),
+//                   idx,
+//                   allResults,
+//                 );
+//               }
+//               ++idx;
+//             }
+//           } else {
+//             wasSimpleDifference = true;
+//           }
+//         } else {
+//           if (x !== null && y !== null && !Array.isArray(y)) {
+//             for (const key of new Set<string>(
+//               Object.keys(x).concat(Object.keys(y)),
+//             )) {
+//               const isInX = key in x;
+//               const isInY = key in y;
+//               if (isInX && isInY) {
+//                 calculateDiffPathsImpl(
+//                   (x as any)[key], // eslint-disable-line
+//                   (y as any)[key], // eslint-disable-line
+//                   parentPaths,
+//                   key,
+//                   allResults,
+//                 );
+//               } else if (!isInX) {
+//                 // y has extra element - treat as insertion
+//                 allResults.push({
+//                   path: parentPaths.concat(thisProperty),
+//                   change: "I",
+//                 });
+//               } else {
+//                 // x has extra element - treat as deletion
+//                 allResults.push({
+//                   path: parentPaths.concat(thisProperty),
+//                   change: "D",
+//                 });
+//               }
+//             }
+//           } else {
+//             wasSimpleDifference = true;
+//           }
+//         }
+//       }
+//       break;
+//     default:
+//       wasSimpleDifference = true;
+//       break;
+//   }
 
-  if (wasSimpleDifference && x !== y) {
-    allResults.push({
-      path: parentPaths.concat(thisProperty),
-      change: "U",
-    });
-  }
-}
+//   if (wasSimpleDifference && x !== y) {
+//     allResults.push({
+//       path: parentPaths.concat(thisProperty),
+//       change: "U",
+//     });
+//   }
+// }
 
 export const getChunks = <T>(array: ReadonlyArray<T>, maxLength: number) => {
-  let retVal: Array<ReadonlyArray<T>> | undefined = undefined;
+  let retVal: Array<Array<T>> | undefined = undefined;
   if (maxLength >= array.length) {
-    retVal = [array];
+    retVal = [[...array]];
   } else if (maxLength <= 1) {
     retVal = array.map((element) => [element]);
   } else {
@@ -150,7 +155,7 @@ export const getChunks = <T>(array: ReadonlyArray<T>, maxLength: number) => {
 export const iterateChunks = <T>(
   array: ReadonlyArray<T>,
   maxLength: number,
-  onChunk: (chunk: ReadonlyArray<T>, startIndex: number) => unknown,
+  onChunk: (chunk: Array<T>, startIndex: number) => unknown,
 ) => {
   let start = 0;
   while (start + maxLength <= array.length) {
