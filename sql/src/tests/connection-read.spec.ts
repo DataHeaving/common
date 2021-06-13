@@ -73,30 +73,40 @@ test("The getQuerySingleValue works as expected", async (t) => {
   prepareCalled = doneCalled = false;
   seenDatum = undefined;
 
-  await t.throwsAsync(() =>
-    spec.getQuerySingleValue({
-      connection,
-      sqlCommand,
-      prepareRequest,
-      onDone,
-      onRow,
-      strict: true, // This will cause an exception to be thrown if more than one row
-    }),
+  await t.throwsAsync(
+    () =>
+      spec.getQuerySingleValue({
+        connection,
+        sqlCommand,
+        prepareRequest,
+        onDone,
+        onRow,
+        strict: true,
+      }),
+    {
+      instanceOf: spec.UnexpectedAmountOfRowsError,
+      message: TOO_MANY_ROWS_ERROR.message,
+    },
   );
   t.true(prepareCalled);
-  t.false(doneCalled); // TODO maybe doneCalled should be true here, for consistency sake when query produces no rows?
+  t.true(doneCalled); // TODO maybe doneCalled should be true here, for consistency sake when query produces no rows?
   t.deepEqual(seenDatum, DATA[0][0]);
   prepareCalled = doneCalled = false;
   seenDatum = undefined;
 
-  await t.throwsAsync(() =>
-    spec.getQuerySingleValue({
-      connection: createTestConnectionAbstraction(t, [])(sqlCommand),
-      sqlCommand,
-      prepareRequest,
-      onDone,
-      onRow,
-    }),
+  await t.throwsAsync(
+    () =>
+      spec.getQuerySingleValue({
+        connection: createTestConnectionAbstraction(t, [])(sqlCommand),
+        sqlCommand,
+        prepareRequest,
+        onDone,
+        onRow,
+      }),
+    {
+      instanceOf: spec.UnexpectedAmountOfRowsError,
+      message: TOO_FEW_ROWS_ERROR.message,
+    },
   );
   t.true(prepareCalled);
   t.true(doneCalled);
@@ -131,30 +141,40 @@ test("The getQuerySingleRow works as expected", async (t) => {
   prepareCalled = doneCalled = false;
   seenData.length = 0;
 
-  await t.throwsAsync(() =>
-    spec.getQuerySingleRow({
-      connection,
-      sqlCommand,
-      prepareRequest,
-      onDone,
-      onRow,
-      strict: true, // This will cause an exception to be thrown if more than one row
-    }),
+  await t.throwsAsync(
+    () =>
+      spec.getQuerySingleRow({
+        connection,
+        sqlCommand,
+        prepareRequest,
+        onDone,
+        onRow,
+        strict: true, // This will cause an exception to be thrown if more than one row
+      }),
+    {
+      instanceOf: spec.UnexpectedAmountOfRowsError,
+      message: TOO_MANY_ROWS_ERROR.message,
+    },
   );
   t.true(prepareCalled);
-  t.false(doneCalled);
+  t.true(doneCalled);
   t.deepEqual(seenData, DATA.slice(0, 1) as typeof seenData);
   prepareCalled = doneCalled = false;
   seenData.length = 0;
 
-  await t.throwsAsync(() =>
-    spec.getQuerySingleRow({
-      connection: createTestConnectionAbstraction(t, [])(sqlCommand),
-      sqlCommand,
-      prepareRequest,
-      onDone,
-      onRow,
-    }),
+  await t.throwsAsync(
+    () =>
+      spec.getQuerySingleRow({
+        connection: createTestConnectionAbstraction(t, [])(sqlCommand),
+        sqlCommand,
+        prepareRequest,
+        onDone,
+        onRow,
+      }),
+    {
+      instanceOf: spec.UnexpectedAmountOfRowsError,
+      message: TOO_FEW_ROWS_ERROR.message,
+    },
   );
   t.true(prepareCalled);
   t.true(doneCalled);
@@ -304,22 +324,29 @@ function createTestConnectionAbstraction<
     },
     defaultPrepareRequest: (sql) => sql,
     streamQuery: (options) => {
-      t.is(options.request, options.sqlCommand);
-      if (streamQueryErrorBehaviour?.whenToReturnError === "beforeData") {
-        return Promise.resolve(streamQueryErrorBehaviour?.errorToReturn);
+      try {
+        t.is(options.request, options.sqlCommand);
+        if (streamQueryErrorBehaviour?.whenToReturnError === "beforeData") {
+          return Promise.resolve(streamQueryErrorBehaviour?.errorToReturn);
+        }
+        for (const datum of data) {
+          options.onRow(datum, undefined);
+        }
+        if (streamQueryErrorBehaviour?.whenToReturnError === "beforeDone") {
+          return Promise.resolve(streamQueryErrorBehaviour?.errorToReturn);
+        }
+
+        return Promise.resolve(
+          streamQueryErrorBehaviour?.whenToReturnError === "beforeReturn"
+            ? streamQueryErrorBehaviour?.errorToReturn
+            : undefined,
+        );
+      } finally {
+        options.onDone?.([data.length]);
       }
-      for (const datum of data) {
-        options.onRow(datum, undefined);
-      }
-      if (streamQueryErrorBehaviour?.whenToReturnError === "beforeDone") {
-        return Promise.resolve(streamQueryErrorBehaviour?.errorToReturn);
-      }
-      options.onDone?.([data.length]);
-      return Promise.resolve(
-        streamQueryErrorBehaviour?.whenToReturnError === "beforeReturn"
-          ? streamQueryErrorBehaviour?.errorToReturn
-          : undefined,
-      );
     },
   });
 }
+
+const TOO_MANY_ROWS_ERROR = new spec.UnexpectedAmountOfRowsError(true);
+const TOO_FEW_ROWS_ERROR = new spec.UnexpectedAmountOfRowsError(false);

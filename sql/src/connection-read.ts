@@ -82,29 +82,11 @@ export const getQuerySingleValue = async <
     TResult,
     unknown
   > & { columnIndex?: number },
-) => {
-  let retVal: TResult | undefined = undefined;
-  let resultSet = false;
-  await streamQuery({
+) =>
+  getQuerySingleRow({
     ...opts,
-    onRow: (...args) => {
-      if (resultSet) {
-        if (opts.strict === true) {
-          throw new Error("Expected exactly one row but got more.");
-        }
-      } else {
-        retVal = opts.onRow(args[0][opts?.columnIndex ?? 0], args[1]);
-        resultSet = true;
-      }
-    },
+    onRow: (...args) => opts.onRow(args[0][opts?.columnIndex ?? 0], args[1]),
   });
-
-  if (!resultSet) {
-    throw new Error("Query produced no rows.");
-  }
-
-  return (retVal as unknown) as TResult;
-};
 
 export const getQuerySingleRow = async <
   TIntermediateRequest,
@@ -124,7 +106,7 @@ export const getQuerySingleRow = async <
     onRow: (...args) => {
       if (resultSet) {
         if (opts.strict === true) {
-          throw new Error("Expected exactly one row but got more.");
+          throw new UnexpectedAmountOfRowsError(true);
         }
       } else {
         retVal = opts.onRow(args[0], args[1]);
@@ -134,7 +116,7 @@ export const getQuerySingleRow = async <
   });
 
   if (!resultSet) {
-    throw new Error("Query produced no rows.");
+    throw new UnexpectedAmountOfRowsError(false);
   }
 
   return retVal;
@@ -220,3 +202,9 @@ export const streamQueryOnRequest = async <TFinalRequest>(
 //     this.errors = errorArray;
 //   }
 // }
+
+export class UnexpectedAmountOfRowsError extends Error {
+  public constructor(public readonly tooMany: boolean) {
+    super(`Expected exactly one row, but got too ${tooMany ? "many" : "few"}`);
+  }
+}
