@@ -264,14 +264,12 @@ test("Control flow works as expected", async (t) => {
         seenControlFlow = controlFlow;
         for (const row of rows) {
           while (paused) {
-            // console.log("PAUSED"); // eslint-disable-line
             await common.sleep(100);
           }
           opts.onRow(row, controlFlow);
         }
 
         while (paused) {
-          // console.log("PAUSED2"); // eslint-disable-line
           await common.sleep(100);
         }
         ++curRow;
@@ -280,7 +278,6 @@ test("Control flow works as expected", async (t) => {
     (async () => {
       while (curRow <= rows.length) {
         while (!paused && curRow <= rows.length) {
-          // console.log("NOT PAUSED", curRow); // eslint-disable-line
           await common.sleep(50);
         }
         if (paused) {
