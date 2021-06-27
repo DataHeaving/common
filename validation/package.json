@@ -9,7 +9,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/DataHeaving/common-validation.git"
+    "url": "https://github.com/DataHeaving/common.git"
   },
   "scripts": {
     "build": "npm run tsc && npm run lint",
@@ -18,7 +18,7 @@
     "lint": "eslint ./src --ext .ts,.tsx",
     "watch": "tsc -w",
     "test": "nyc ava",
-    "remove-test-files": "rm -rf dist/*/tests src/*/tests"
+    "remove-test-files": "rm -rf dist/*/tests"
   },
   "dependencies": {
     "@data-heaving/common": "0.10.1",
@@ -46,7 +46,7 @@
   "types": "./dist/cjs/index.d.ts",
   "ava": {
     "files": [
-      "dist/cjs/**/tests/*.js"
+      "dist/cjs/**/tests/*.spec.js"
     ],
     "timeout": "10m"
   }

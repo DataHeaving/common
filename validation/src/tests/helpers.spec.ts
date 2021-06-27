@@ -169,7 +169,7 @@ const performDecodeOrThrowTest = <TType, TValidation extends types.Type<TType>>(
         return new CustomError(); // Notice that simply returning an error will *not* throw it.
       }),
     {
-      instanceOf: Error,
+      instanceOf: spec.DecodeError,
       message,
     },
   );
