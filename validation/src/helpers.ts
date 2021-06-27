@@ -1,6 +1,7 @@
 import * as t from "io-ts";
 import { PathReporter } from "io-ts/PathReporter";
 import * as common from "@data-heaving/common";
+import { Left } from "fp-ts/lib/Either";
 
 export const decodeOrThrow = <TType, TInput>(
   decode: (i: TInput) => t.Validation<TType>,
@@ -14,7 +15,7 @@ export const decodeOrThrow = <TType, TInput>(
     if (customError) {
       customError(resultOrError);
     }
-    throw new Error(PathReporter.report(resultOrError).join("\n"));
+    throw new DecodeError(resultOrError);
   }
 };
 
@@ -58,3 +59,12 @@ export const retrieveValidatedDataFromStorage = async <TType>(
   }
   return existingData;
 };
+
+export class DecodeError extends Error {
+  public readonly errors: t.Errors;
+
+  public constructor(errors: Left<t.Errors>) {
+    super(PathReporter.report(errors).join("\n"));
+    this.errors = errors.left;
+  }
+}
