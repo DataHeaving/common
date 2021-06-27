@@ -1,4 +1,6 @@
 # Data Heaving - Common
+[![Code Coverage](https://codecov.io/gh/DataHeaving/common/branch/develop/graph/badge.svg?flag=common)](https://codecov.io/gh/DataHeaving/common)
+
 This folder contains source code for `@data-heaving/common` NPM package.
 The exported entities include:
 - Commonly used helper methods for dictionaries and arrays

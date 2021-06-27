@@ -42,6 +42,17 @@ export const intGtZero = t.refinement(
   "IntegerGreaterThanToZero",
 );
 
+export const intLeqZero = t.refinement(
+  t.Integer,
+  (int) => int <= 0,
+  "IntegerGreaterThanOrEqualToZero",
+);
+export const intLtZero = t.refinement(
+  t.Integer,
+  (int) => int < 0,
+  "IntegerGreaterThanToZero",
+);
+
 export const uuid = t.refinement(
   t.string,
   (maybeUUID) => {

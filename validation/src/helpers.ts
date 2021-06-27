@@ -1,20 +1,21 @@
 import * as t from "io-ts";
 import { PathReporter } from "io-ts/PathReporter";
 import * as common from "@data-heaving/common";
+import { Left } from "fp-ts/lib/Either";
 
 export const decodeOrThrow = <TType, TInput>(
   decode: (i: TInput) => t.Validation<TType>,
   input: TInput,
-  customError?: () => unknown,
+  customError?: (result: t.Validation<TType>) => unknown,
 ) => {
   const resultOrError = decode(input);
   if (resultOrError._tag === "Right") {
     return resultOrError.right;
   } else {
     if (customError) {
-      customError();
+      customError(resultOrError);
     }
-    throw new Error(PathReporter.report(resultOrError).join("\n"));
+    throw new DecodeError(resultOrError);
   }
 };
 
@@ -24,11 +25,9 @@ export const decodeOrDefault = <TType, TInput, TError = undefined>(
   customError?: (error: t.Validation<TType>) => TError,
 ) => {
   const resultOrError = decode(input);
-  if (resultOrError._tag === "Right") {
-    return resultOrError.right;
-  } else {
-    return customError?.(resultOrError);
-  }
+  return resultOrError._tag === "Right"
+    ? resultOrError.right
+    : customError?.(resultOrError);
 };
 
 export const decodePartialOrThrow = <TType>(
@@ -60,3 +59,12 @@ export const retrieveValidatedDataFromStorage = async <TType>(
   }
   return existingData;
 };
+
+export class DecodeError extends Error {
+  public readonly errors: t.Errors;
+
+  public constructor(errors: Left<t.Errors>) {
+    super(PathReporter.report(errors).join("\n"));
+    this.errors = errors.left;
+  }
+}

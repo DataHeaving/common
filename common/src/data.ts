@@ -37,7 +37,7 @@ export type DatumTransformerFactory<TContext, TDatum, TTransformed> =
 
 export type SimpleDatumTransformerFactory<TContext, TDatum, TTransformed> = {
   transformer: "simple";
-  factory: (arg: TContext) => SimpleDatumTransformer<TDatum, TTransformed>;
+  factory: (context: TContext) => SimpleDatumTransformer<TDatum, TTransformed>;
 };
 
 export type SimpleDatumTransformer<TDatum, TTransformed> = (
@@ -48,7 +48,7 @@ export type ComplexDatumTransformerFactory<TContext, TDatum, TTransformed> = {
   transformer: "complex";
   factory: () => (
     next: DatumStoring<TTransformed>,
-    arg: TContext,
+    context: TContext,
     recreateSignal: () => void,
   ) => ComplexDatumTransformer<TDatum>;
 };
@@ -63,14 +63,12 @@ export const runPipelineWithBufferedData = async <TContext, TDatum>(
   datumStoring: DatumStoringFactory<TContext, TDatum>,
   data: ReadonlyArray<TDatum>,
   concurrencyLevel: number,
-  // getNewArg: (result: TDatum) => TNewArg,
 ) => {
-  // let storing: ReturnType<typeof datumStoring> | undefined = undefined;
   const promises: Array<Promise<unknown>> = [];
   await iteration.iterateInParallel(
     data,
     concurrencyLevel,
-    async (datum, concurrencyContext) => {
+    async (datum, _, concurrencyContext) => {
       let storing = concurrencyContext.storing;
       if (!storing) {
         storing = datumStoring(context, () => {
@@ -103,61 +101,4 @@ export const runPipelineWithBufferedData = async <TContext, TDatum>(
   );
 
   await Promise.all(promises);
-  // if (data.length > 0) {
-  // let curIndex = 0;
-  // concurrencyLevel = Math.min(concurrencyLevel, 1);
-  // await Promise.all(
-  //   new Array<Promise<unknown>>(concurrencyLevel).fill(
-  //     (async () => {
-  //       while (curIndex < data.length) {
-  //         const nextItem = data[curIndex];
-  //         ++curIndex;
-  //         const { storing, promise } = datumStoring(
-  //           getNewArg(nextItem),
-  //           () => {},
-  //         );
-  //         let pauseCount = 0;
-  //         storing.processor(nextItem, {
-  //           pause: () => {
-  //             ++pauseCount;
-  //           },
-  //           resume: () => {
-  //             --pauseCount;
-  //           },
-  //         });
-  //         while (pauseCount > 0) {
-  //           await asyncUtils.sleep(100);
-  //         }
-  //         storing.end();
-  //         if (promise) {
-  //           await promise;
-  //         }
-  //       }
-  //     })(),
-  //     0,
-  //     concurrencyLevel,
-  //   ),
-  // );
-  // }
-  // for (const dataChunk of common.getChunks(data, concurrencyLevel)) {
-  //   let currentStoring:
-  //     | ReturnType<common.DatumStoringFactory<TNewArg, TDatum>>
-  //     | undefined = undefined;
-  //   const recreateSignal = () => (currentStoring = undefined);
-  //   const allSeenPromises: Array<Promise<unknown>> = [];
-  //   for (const datum of dataChunk) {
-  //     if (!currentStoring) {
-  //       currentStoring = datumStoring(getNewArg(datum), recreateSignal);
-  //       const promise = currentStoring.promise;
-  //       if (promise) {
-  //         allSeenPromises.push(promise);
-  //       }
-  //     }
-  //     currentStoring.storing.processor(datum, undefined);
-  //   }
-  //   if (currentStoring) {
-  //     currentStoring.storing.end();
-  //   }
-  //   await Promise.all(allSeenPromises);
-  // }
 };

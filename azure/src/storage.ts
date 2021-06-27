@@ -2,8 +2,8 @@ import * as storage from "@azure/storage-blob";
 import * as id from "@azure/identity";
 import * as common from "@data-heaving/common";
 
-export type BlobClientOrInfo =
-  | storage.BlockBlobClient
+export type BlobClientOrInfo<TBlobClient extends storage.BlobClient> =
+  | TBlobClient
   | BlobClientConstructionInfo;
 
 export interface BlobClientConstructionInfo {
@@ -15,7 +15,7 @@ export interface BlobClientConstructionInfo {
 }
 
 export function createObjectStorageFunctionality<TObject>(
-  blobOrURL: BlobClientOrInfo,
+  blobOrURL: BlobClientOrInfo<storage.BlockBlobClient>,
 ): common.ObjectStorageFunctionality<TObject> {
   const blobClient =
     blobOrURL instanceof storage.BlockBlobClient
@@ -29,6 +29,19 @@ export function createObjectStorageFunctionality<TObject>(
         data instanceof Buffer ? data : Buffer.from(JSON.stringify(data)),
       );
     },
+  };
+}
+
+export function createReadonlyObjectStorageFunctionality<TObject>(
+  blobOrURL: BlobClientOrInfo<storage.BlobClient>,
+): Omit<common.ObjectStorageFunctionality<TObject>, "writeNewData"> {
+  const blobClient =
+    blobOrURL instanceof storage.BlobClient
+      ? blobOrURL
+      : new storage.BlobClient(blobOrURL.url, blobOrURL.credential);
+  return {
+    storageID: blobClient.url,
+    readExistingData: () => blobClient.downloadToBuffer(),
   };
 }
 

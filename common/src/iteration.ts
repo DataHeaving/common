@@ -1,40 +1,56 @@
 export const deduplicate = <T>(
   items: ReadonlyArray<T>,
   getKey: (item: T) => string,
-) => {
-  return Object.values(
-    items.reduce<{ [key: string]: T }>((dic, item) => {
+) =>
+  // The state in reduce method contains dictionary in array, so that we return deduplicated objects always in the same order as they were specified
+  items.reduce<{ dictionary: { [key: string]: T }; array: Array<T> }>(
+    (state, item) => {
       const key = getKey(item);
-      const existing = dic[key];
+      const existing = state.dictionary[key];
       if (!existing) {
-        dic[key] = item;
+        state.dictionary[key] = item;
+        state.array.push(item);
       }
-      return dic;
-    }, {}),
-  );
-};
+      return state;
+    },
+    { dictionary: {}, array: [] },
+  ).array;
 
+export function iterateInParallel<T>(
+  items: ReadonlyArray<T>,
+  concurrencyLevel: number,
+  onItem: (item: T, index: number) => Promise<unknown>,
+): Promise<void>;
+export function iterateInParallel<T, TContext>(
+  items: ReadonlyArray<T>,
+  concurrencyLevel: number,
+  onItem: (item: T, index: number, context: TContext) => Promise<unknown>,
+  createContext: () => TContext,
+  onAsyncLineEnd?: (context: TContext) => void,
+): Promise<void>;
 export async function iterateInParallel<T, TContext>(
   items: ReadonlyArray<T>,
   concurrencyLevel: number,
-  onItem: (item: T, context: TContext, index: number) => Promise<unknown>,
-  createContext: () => TContext,
+  onItem: (item: T, index: number, context?: TContext) => Promise<unknown>,
+  createContext?: () => TContext,
   onAsyncLineEnd?: (context: TContext) => void,
 ) {
   if (items.length > 0) {
     let curIndex = 0;
-    concurrencyLevel = Math.min(concurrencyLevel, 1);
+    concurrencyLevel = Math.max(concurrencyLevel, 1);
     await Promise.all(
-      new Array<Promise<unknown>>(concurrencyLevel).fill(
+      new Array<Promise<unknown>>(
+        Math.min(items.length, concurrencyLevel),
+      ).fill(
         (async () => {
-          const ctx = createContext();
+          const ctx = createContext?.();
           while (curIndex < items.length) {
             const indexToGive = curIndex;
             ++curIndex;
-            await onItem(items[indexToGive], ctx, indexToGive);
+            await onItem(items[indexToGive], indexToGive, ctx);
           }
 
-          onAsyncLineEnd?.(ctx);
+          onAsyncLineEnd?.(ctx!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
         })(),
         0,
         concurrencyLevel,
