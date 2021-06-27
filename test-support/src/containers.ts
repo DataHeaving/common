@@ -36,9 +36,9 @@ export const startContainerAsync = async ({
         isNetworkSpecified ? "--expose" : "--publish",
         ...containerPorts.map(
           ({ containerPort, exposedPort }) =>
-            `${exposedPort ?? containerPort}${
-              isNetworkSpecified ? "" : `:${containerPort}`
-            }`,
+            `${
+              isNetworkSpecified ? containerPort : exposedPort ?? containerPort
+            }${isNetworkSpecified ? "" : `:${containerPort}`}`,
         ),
         ...Object.keys(containerEnvironment).flatMap((envName) => [
           "--env",
@@ -72,7 +72,7 @@ export const startContainerAsync = async ({
         };
       }
       return {
-        port: exposedPort ?? containerPort,
+        port: isNetworkSpecified ? containerPort : exposedPort ?? containerPort,
         checkReadyness,
         isReady: false,
       };

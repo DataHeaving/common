@@ -18,10 +18,11 @@ thisTest.before("Start container", async (t) => {
     image: IMAGE,
     containerPorts: [
       {
-        containerPort: 80,
+        containerPort: CONTAINER_PORT,
+        exposedPort: HOST_PORT,
       },
     ],
-    containerEnvironment: {},
+    containerEnvironment: CONTAINER_ENV,
     // This is optional parameter - running locally though, it is needed
     networkName: env.CONTAINER_NW,
   });
@@ -49,10 +50,11 @@ test("Stopping container is detected and exception of correct type is thrown", a
     image: IMAGE,
     containerPorts: [
       {
-        containerPort: 80,
+        containerPort: CONTAINER_PORT,
+        exposedPort: HOST_PORT,
       },
     ],
-    containerEnvironment: {},
+    containerEnvironment: CONTAINER_ENV,
     // This is optional parameter - running locally though, it is needed
     networkName: env.CONTAINER_NW,
   });
@@ -71,12 +73,11 @@ test("Stopping container is detected also after first call to checkIsReady", asy
     image: IMAGE,
     containerPorts: [
       {
-        containerPort: 81,
+        containerPort: CONTAINER_PORT + 1,
+        exposedPort: HOST_PORT,
       },
     ],
-    containerEnvironment: {
-      NGINX_PORT: "80",
-    },
+    containerEnvironment: CONTAINER_ENV,
     // This is optional parameter - running locally though, it is needed
     networkName: env.CONTAINER_NW,
   });
@@ -92,4 +93,10 @@ test("Stopping container is detected also after first call to checkIsReady", asy
   });
 });
 
-const IMAGE = "nginx";
+const IMAGE = "nginx:stable";
+
+const CONTAINER_PORT = 80;
+const HOST_PORT = 1234;
+const CONTAINER_ENV = {
+  NGINX_PORT: `${CONTAINER_PORT}`,
+};
