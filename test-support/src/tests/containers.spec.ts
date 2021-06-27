@@ -4,6 +4,7 @@ import * as spec from "../containers";
 import { env } from "process";
 import { execFile } from "child_process";
 import { promisify } from "util";
+import { Socket } from "net";
 
 const execFileAsync = promisify(execFile);
 
@@ -75,6 +76,14 @@ test("Stopping container is detected also after first call to checkIsReady", asy
       {
         containerPort: CONTAINER_PORT + 1,
         exposedPort: HOST_PORT + 2,
+        checkReadyness: async (host, port) => {
+          const socket = new Socket();
+          try {
+            await spec.connectAsync(socket, { host, port: port + 10 });
+          } finally {
+            socket.destroy();
+          }
+        },
       },
     ],
     containerEnvironment: CONTAINER_ENV,
@@ -98,5 +107,5 @@ const IMAGE = "nginx:stable";
 const CONTAINER_PORT = 80;
 const HOST_PORT = 1234;
 const CONTAINER_ENV = {
-  NGINX_PORT: `${CONTAINER_PORT}`,
+  DUMMY: "DUMMY",
 };
