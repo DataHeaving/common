@@ -51,7 +51,7 @@ test("Stopping container is detected and exception of correct type is thrown", a
     containerPorts: [
       {
         containerPort: CONTAINER_PORT,
-        exposedPort: HOST_PORT,
+        exposedPort: HOST_PORT + 1,
       },
     ],
     containerEnvironment: CONTAINER_ENV,
@@ -74,7 +74,7 @@ test("Stopping container is detected also after first call to checkIsReady", asy
     containerPorts: [
       {
         containerPort: CONTAINER_PORT + 1,
-        exposedPort: HOST_PORT,
+        exposedPort: HOST_PORT + 2,
       },
     ],
     containerEnvironment: CONTAINER_ENV,
