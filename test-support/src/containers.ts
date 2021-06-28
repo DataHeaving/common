@@ -78,23 +78,24 @@ export const startContainerAsync = async ({
       };
     },
   );
-  const containerHostName: string | undefined = isNetworkSpecified
-    ? undefined
+
+  const containerHostName: string = isNetworkSpecified
+    ? await getContainerHostName(containerID)
     : "127.0.0.1";
+
   return {
     containerID,
+    containerHostName,
     checkIsReady: async () => {
       const nonReadyPorts = readynessState.filter(({ isReady }) => !isReady);
       let isReady = nonReadyPorts.length <= 0;
       if (!isReady) {
         try {
-          const actualContainerHostName =
-            containerHostName ?? (await getContainerHostName(containerID));
           await Promise.all(
             nonReadyPorts.map(async (readynessState) => {
               try {
                 await readynessState.checkReadyness(
-                  actualContainerHostName,
+                  containerHostName,
                   readynessState.port,
                 );
                 readynessState.isReady = true;
