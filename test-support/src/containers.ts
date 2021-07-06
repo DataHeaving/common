@@ -14,6 +14,8 @@ export interface ContainerStartOptions {
   containerEnvironment: Record<string, string>; // Safe to have secret variables here, they are not passed via command-line
   networkName?: string; // This is useful when current process itself is running within a Docker container
   waitForContainerLogsInCaseOfContainerShutDown?: number;
+  dockerArguments?: ReadonlyArray<string>;
+  imageArguments?: ReadonlyArray<string>;
 }
 
 export const startContainerAsync = async ({
@@ -22,6 +24,8 @@ export const startContainerAsync = async ({
   containerEnvironment,
   networkName,
   waitForContainerLogsInCaseOfContainerShutDown,
+  dockerArguments,
+  imageArguments,
 }: ContainerStartOptions) => {
   const isNetworkSpecified = networkName?.length ?? 0 > 0;
   const containerID = (
@@ -44,7 +48,9 @@ export const startContainerAsync = async ({
           "--env",
           envName,
         ]),
+        ...(dockerArguments || []),
         image,
+        ...(imageArguments || []),
       ],
       {
         env: containerEnvironment,
