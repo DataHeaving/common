@@ -12,12 +12,10 @@ on:
     - 'common/**'
     - 'validation/**'
     - 'sql/**'
-    - 'azure/**'
     - 'test-support/**'
     - '!common/README.md'
     - '!validation/README.md'
     - '!sql/README.md'
-    - '!azure/README.md'
     - '!test-support/README.md'
     - '.codecov.yml'
   push: # Run this pipeline also after merging to develop, to report code coverage to codecov for this branch
@@ -28,7 +26,7 @@ jobs:
   build_and_test:
     strategy:
       matrix:
-        dir: [ common, sql, validation, azure, test-support ]
+        dir: [ common, sql, validation, test-support ]
     runs-on: ubuntu-latest
     name: Build and test ${{ matrix.dir }}
     steps:

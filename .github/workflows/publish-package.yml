@@ -9,7 +9,7 @@ jobs:
   publish:
     strategy:
       matrix:
-        dir: [ common, sql, validation, azure, test-support ]
+        dir: [ common, sql, validation, test-support ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
