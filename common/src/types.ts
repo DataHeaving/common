@@ -32,3 +32,7 @@ export interface ObjectStorageFunctionality<TObject> {
 }
 
 export type MaybePromise<T> = T | Promise<T>;
+
+export type OneOrMore<T> = T | ReadonlyArray<T>;
+
+export type OneOrMoreMutable<T> = T | Array<T>;

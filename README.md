@@ -6,7 +6,6 @@ There are multiple packages in the repository, all of which could be thought as 
 - [Common](common) package for most fundamental type definitions and useful operations for objects, in addition to event-oriented API,
 - [Validation](validation) package for most commonly used helpers to work with [io-ts](https://github.com/gcanti/io-ts) library,
 - [SQL](sql) package for most commonly used helpers to work with SQL databases in Node, and
-- [Azure](azure) package for most commonly used helpers to work when handling data in Azure cloud.
 
 # Usage
 All packages of Data Heaving project are published as NPM packages to public NPM repository under `@data-heaving` organization.
